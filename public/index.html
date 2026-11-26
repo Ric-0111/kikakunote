@@ -79,11 +79,28 @@ button{cursor:pointer}
 .tools{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px}
 .hint{margin:10px 0 0; font-size:12px; color:var(--muted)}
 
+/* thumbnails (square) */
+.thumb{display:grid; place-items:center; flex:none; width:64px; height:64px; aspect-ratio:1/1; border-radius:8px; overflow:hidden; background:var(--surface); border:1px dashed var(--line); color:var(--muted); opacity:1}
+.thumb svg{opacity:.5}
+.thumb.has{border:0; background:var(--line)}
+.thumb img{display:block; width:100%; height:100%; object-fit:cover}
+.thumb.big{width:140px; height:140px}
+.thumb.drop{border-color:var(--accent); background:var(--accent-soft)}
+.d-head{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:16px; align-items:start}
+.d-text{min-width:0}
+.d-thumb{padding:0; border:0; background:none; width:104px; height:104px; border-radius:10px; overflow:hidden; cursor:zoom-in}
+.d-thumb .thumb{width:100%; height:100%; border-radius:10px}
+.thumb-edit{display:flex; gap:14px; align-items:flex-start; flex-wrap:wrap}
+.thumb-actions{display:grid; gap:8px; justify-items:start; min-width:0; flex:1 1 180px}
+.lightbox{position:fixed; inset:0; z-index:60; display:grid; place-items:center; padding:16px; background:rgba(10,12,18,.82); cursor:zoom-out}
+.lightbox img{width:min(92vw, 80vh, 560px); height:min(92vw, 80vh, 560px); object-fit:cover; border-radius:12px; background:var(--line)}
+
 /* index rows */
 .rows{margin-top:16px; border-top:1px solid var(--line)}
 .row{display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:4px 10px; border-bottom:1px solid var(--line)}
 .row.dim{opacity:.62}
-.row-main{display:grid; grid-template-columns:2.1rem minmax(0,1fr); gap:0 6px; width:100%; text-align:left; background:none; border:0; padding:16px 0; border-radius:6px}
+.row-body{padding-left:2px}
+.row-main{display:grid; grid-template-columns:2.1rem 64px minmax(0,1fr); gap:0 6px; width:100%; text-align:left; background:none; border:0; padding:16px 0; border-radius:6px}
 .row-main:hover .row-logline{color:var(--accent)}
 .no{font-family:var(--font-display); font-weight:800; font-size:15px; color:var(--muted); font-variant-numeric:tabular-nums; line-height:1.6}
 .row-body{display:grid; gap:2px; min-width:0}
@@ -178,6 +195,11 @@ button{cursor:pointer}
 .dialog .check{margin-top:12px}
 .dialog .hint{margin-top:10px}
 
+@media (min-width:641px){
+  .thumb{width:76px; height:76px}
+  .row-main{grid-template-columns:2.1rem 76px minmax(0,1fr)}
+  .d-thumb{width:140px; height:140px}
+}
 @media (max-width:640px){
   .sec{grid-template-columns:1fr; gap:6px; padding:18px 0}
   .ep{grid-template-columns:1fr}
@@ -230,6 +252,7 @@ var BOOKMARK = '<path d="M7 4h10v16l-5-4-5 4z"/>';
 var UP = '<path d="M12 19V5M6 11l6-6 6 6"/>';
 var DOWN = '<path d="M12 5v14M6 13l6 6 6-6"/>';
 var PLUS = '<path d="M12 5v14M5 12h14"/>';
+var IMG = '<rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="9" r="1.5"/><path d="M20 15l-4.5-4.5L6 20"/>';
 var TOKEN_KEY = 'kikaku-note-token', SAVED_KEY = 'kikaku-note-saved';
 function lsGet(k){ try{ return localStorage.getItem(k) || ''; }catch(e){ return ''; } }
 function lsSet(k, v){ try{ if(v) localStorage.setItem(k, v); else localStorage.removeItem(k); }catch(e){} }
@@ -240,7 +263,7 @@ var STATUS = {idea: 'アイデア段階', plot: 'プロット完成', name: 'ネ
 
 /* ---------- data ---------- */
 function blank(){
-  return {id: uid(), title: '', logline: '', synopsis: '', genres: [], target: '', goal: '', hook: '', chars: [], plot: ['', '', ''], status: '', hidden: false, updated: ''};
+  return {id: uid(), title: '', logline: '', synopsis: '', genres: [], target: '', goal: '', hook: '', chars: [], plot: ['', '', ''], status: '', hidden: false, thumb: '', updated: ''};
 }
 function normItem(x){
   x = x || {};
@@ -251,7 +274,7 @@ function normItem(x){
     target: str(x.target), goal: str(x.goal), hook: str(x.hook),
     chars: (Array.isArray(x.chars) ? x.chars : []).map(function(c){ return {name: str(c && c.name), desc: str(c && c.desc)}; }),
     plot: [0, 1, 2].map(function(i){ return str(Array.isArray(x.plot) ? x.plot[i] : ''); }),
-    status: STATUS[x.status] ? x.status : '', hidden: x.hidden === true, updated: str(x.updated)
+    status: STATUS[x.status] ? x.status : '', hidden: x.hidden === true, thumb: str(x.thumb), updated: str(x.updated)
   };
 }
 
@@ -287,7 +310,7 @@ function loadSaved(){
 var S = {
   screen: 'boot', token: lsGet(TOKEN_KEY), role: '', items: [], id: null, from: 'list', genre: '',
   editing: false, isNew: false, draft: null, busy: false, msg: '', err: '', focusId: '', delArmed: false,
-  saved: loadSaved(), modal: false, reorder: false, withLogline: true
+  saved: loadSaved(), modal: false, reorder: false, withLogline: true, light: ''
 };
 function canEdit(){ return S.role === 'edit'; }
 function byId(id){ return S.items.filter(function(x){ return x.id === id; })[0]; }
@@ -316,6 +339,91 @@ function usedGenres(){
 }
 function visibleItems(){
   return S.genre ? S.items.filter(function(it){ return it.genres.indexOf(S.genre) >= 0; }) : S.items;
+}
+
+/* ---------- thumbnails ---------- */
+var thumbCache = {};
+function clearThumbs(){
+  Object.keys(thumbCache).forEach(function(k){ thumbCache[k].then(function(u){ if(u) URL.revokeObjectURL(u); }); });
+  thumbCache = {};
+}
+function fetchThumb(it){
+  var key = it.id + ':' + it.thumb;
+  if(!thumbCache[key]){
+    thumbCache[key] = fetch('/api/thumb/' + encodeURIComponent(it.id) + '?v=' + encodeURIComponent(it.thumb), {headers: {authorization: 'Bearer ' + S.token}})
+      .then(function(r){ if(!r.ok) throw new Error('x'); return r.blob(); })
+      .then(function(b){ return URL.createObjectURL(b); })
+      .catch(function(){ delete thumbCache[key]; return ''; });
+  }
+  return thumbCache[key];
+}
+function thumbBox(it, extra){
+  var box = h('span', {class: 'thumb' + (extra ? ' ' + extra : ''), 'aria-hidden': 'true'});
+  if(it && it.thumb){
+    box.classList.add('has');
+    fetchThumb(it).then(function(u){ if(u) box.replaceChildren(h('img', {src: u, alt: '', decoding: 'async'})); });
+  }else box.append(svg(IMG, 22));
+  return box;
+}
+/* 画像を正方形に切り抜いて、webpに変換して軽くする */
+function makeThumb(file){
+  return new Promise(function(resolve, reject){
+    var url = URL.createObjectURL(file), img = new Image();
+    img.onload = function(){
+      try{
+        var w = img.naturalWidth, hh = img.naturalHeight, side = Math.min(w, hh), out = Math.min(480, side);
+        var c = document.createElement('canvas'); c.width = c.height = out;
+        var ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, out, out);
+        ctx.drawImage(img, (w - side) / 2, (hh - side) / 2, side, side, 0, 0, out, out);
+        URL.revokeObjectURL(url);
+        var q = 0.82;
+        (function attempt(type){
+          c.toBlob(function(b){
+            if(!b) return reject(new Error('blob'));
+            if(type === 'image/webp' && b.type !== 'image/webp') return attempt('image/jpeg');
+            if(b.size > 240 * 1024 && q > 0.35){ q -= 0.15; return attempt(type); }
+            resolve(b);
+          }, type, q);
+        })('image/webp');
+      }catch(e){ reject(e); }
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); reject(new Error('decode')); };
+    img.src = url;
+  });
+}
+function setDraftThumb(file){
+  if(!file || !S.draft) return;
+  S.err = ''; S.msg = '画像を変換しています…'; render();
+  makeThumb(file).then(function(b){
+    var d = S.draft; if(!d) return;
+    if(d.thumbUrl) URL.revokeObjectURL(d.thumbUrl);
+    d.thumbBlob = b; d.thumbUrl = URL.createObjectURL(b); d.removeThumb = false;
+    S.msg = '画像を設定しました（' + Math.round(b.size / 1024) + 'KB）。保存すると反映されます。'; render();
+  }).catch(function(){ S.msg = ''; S.err = 'この画像は読み込めませんでした。別の画像を試してください。'; render(); });
+}
+function clearDraftThumb(){
+  var d = S.draft; if(!d) return;
+  if(d.thumbUrl) URL.revokeObjectURL(d.thumbUrl);
+  d.thumbBlob = null; d.thumbUrl = ''; if(d.thumb) d.removeThumb = true;
+  render();
+}
+function pasteFromClipboard(){
+  if(!navigator.clipboard || !navigator.clipboard.read){ S.err = 'この端末ではボタンから貼り付けできません。入力欄に画像を貼り付けてください。'; render(); return; }
+  navigator.clipboard.read().then(function(list){
+    for(var i = 0; i < list.length; i++){
+      var t = list[i].types.filter(function(x){ return x.indexOf('image/') === 0; })[0];
+      if(t) return list[i].getType(t).then(setDraftThumb);
+    }
+    S.err = 'クリップボードに画像がありません。'; render();
+  }).catch(function(){ S.err = 'クリップボードを読み取れませんでした。画像をコピーして、入力欄に貼り付けてください。'; render(); });
+}
+function rawApi(method, path, blob){
+  return fetch('/api' + path, {method: method, headers: {authorization: 'Bearer ' + S.token, 'content-type': blob ? blob.type : 'application/octet-stream'}, body: blob}).then(function(res){
+    return res.json().catch(function(){ return null; }).then(function(data){
+      if(!res.ok){ var err = new Error((data && data.error) || ('http_' + res.status)); err.status = res.status; throw err; }
+      return data;
+    });
+  });
 }
 
 /* ---------- routing: #saved / #n-<id> ---------- */
@@ -351,6 +459,7 @@ window.addEventListener('popstate', applyRoute);
 
 function toLock(msg){
   S.token = ''; lsSet(TOKEN_KEY, ''); S.role = ''; S.items = []; S.id = null; S.editing = false; S.draft = null; S.isNew = false;
+  clearThumbs(); S.light = '';
   S.busy = false; S.msg = ''; S.modal = false; S.reorder = false; S.genre = ''; S.err = msg || ''; S.screen = 'lock';
   history.replaceState(null, '', basePath()); render();
 }
@@ -433,6 +542,7 @@ function rowEl(it, no, mode, pos, total){
   return h('div', {class: 'row' + (it.hidden ? ' dim' : '')},
     h('button', {class: 'row-main', type: 'button', onclick: function(){ openItem(it.id); }},
       h('span', {class: 'no', text: pad(no)}),
+      thumbBox(it),
       h('span', {class: 'row-body'},
         it.title ? h('span', {class: 'row-title', text: it.title}) : null,
         h('span', {class: 'row-logline' + (it.logline ? '' : ' empty'), text: it.logline || '一言あらすじ未入力'}),
@@ -534,9 +644,16 @@ function simple(key, rows, ph){ return area('f-' + key, rows, ph, {get: function
 
 function saveDraft(){
   var d = S.draft; d.genres = d.genres.slice(0, 3);
+  var payload = JSON.parse(JSON.stringify(d, function(k, v){ return (k === 'thumbBlob' || k === 'thumbUrl') ? undefined : v; }));
   S.busy = true; S.err = ''; S.msg = '保存しています…'; render();
-  api('PUT', '/notes/' + encodeURIComponent(d.id), d).then(function(r){
+  api('PUT', '/notes/' + encodeURIComponent(d.id), payload).then(function(r){
     S.items = (r.items || []).map(normItem);
+    if(d.thumbBlob) return rawApi('PUT', '/thumb/' + encodeURIComponent(d.id), d.thumbBlob);
+    if(d.removeThumb && d.thumb) return api('DELETE', '/thumb/' + encodeURIComponent(d.id));
+    return r;
+  }).then(function(r){
+    S.items = (r.items || []).map(normItem);
+    if(d.thumbUrl) URL.revokeObjectURL(d.thumbUrl);
     var wasNew = S.isNew;
     S.busy = false; S.msg = '保存しました'; S.editing = false; S.isNew = false; S.draft = null; S.id = d.id;
     if(wasNew){ go('#n-' + d.id); } else { render(); window.scrollTo(0, 0); }
@@ -555,6 +672,23 @@ function editForm(){
   f.append(h('div', {class: 'field'}, h('label', {class: 'sec-label', for: 'f-title', text: 'タイトル（仮でもOK）'}),
     (function(){ var i = h('input', {class: 'in', id: 'f-title', type: 'text', placeholder: '例：〇〇（仮）'}); i.value = d.title; i.addEventListener('input', function(){ d.title = i.value; }); return i; })()));
   f.append(h('div', {class: 'field'}, h('label', {class: 'sec-label', for: 'f-logline', text: '一言あらすじ'}), (function(){ var t = simple('logline', 2, '〇〇が〇〇する話'); t.classList.add('big'); return t; })()));
+  var fileIn = h('input', {type: 'file', accept: 'image/*', id: 'f-thumb-file', hidden: true});
+  fileIn.addEventListener('change', function(){ var fl = fileIn.files && fileIn.files[0]; fileIn.value = ''; setDraftThumb(fl); });
+  var pv;
+  if(d.thumbUrl) pv = h('span', {class: 'thumb big has'}, h('img', {src: d.thumbUrl, alt: 'サムネイルのプレビュー'}));
+  else if(d.thumb && !d.removeThumb) pv = thumbBox(d, 'big');
+  else pv = thumbBox(null, 'big');
+  pv.addEventListener('dragover', function(e){ e.preventDefault(); pv.classList.add('drop'); });
+  pv.addEventListener('dragleave', function(){ pv.classList.remove('drop'); });
+  pv.addEventListener('drop', function(e){ e.preventDefault(); pv.classList.remove('drop'); var fl = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if(fl) setDraftThumb(fl); });
+  var hasImg = !!(d.thumbUrl || (d.thumb && !d.removeThumb));
+  f.append(h('div', {class: 'field'}, h('span', {class: 'sec-label'}, 'サムネイル', h('span', {class: 'sec-hint', text: '正方形に切り抜き、軽い形式（webp）に自動で変換します'})),
+    h('div', {class: 'thumb-edit'}, pv, h('div', {class: 'thumb-actions'},
+      h('button', {class: 'btn', type: 'button', onclick: function(){ fileIn.click(); }, text: '画像を選ぶ'}),
+      h('button', {class: 'btn', type: 'button', onclick: pasteFromClipboard, text: 'コピーした画像を貼り付け'}),
+      hasImg ? h('button', {class: 'link danger', type: 'button', onclick: clearDraftThumb, text: '画像を削除'}) : null,
+      h('p', {class: 'hint', style: 'margin:0', text: '画像をコピーして、この画面でそのまま貼り付け（Ctrl+V）もできます。ドラッグ＆ドロップも使えます。'}),
+      fileIn))));
   var seg = h('div', {class: 'seg', role: 'group', 'aria-label': '進み具合'});
   [['', '未設定'], ['idea', STATUS.idea], ['plot', STATUS.plot], ['name', STATUS.name]].forEach(function(p){
     seg.append(h('button', {class: 'chip', type: 'button', 'aria-pressed': d.status === p[0] ? 'true' : 'false', onclick: function(){ d.status = p[0]; render(); }, text: p[1]}));
@@ -637,10 +771,18 @@ function detailScreen(){
     return wrap;
   }
 
-  wrap.append(h('div', {class: 'meta'}, h('span', {class: 'no-big', text: 'No.' + pad(no)}), statusTag(it), it.hidden ? h('span', {class: 'tag draft', text: '非公開（下書き）'}) : null));
-  if(it.title) wrap.append(h('p', {class: 'd-title', text: it.title}));
-  wrap.append(h('h1', {class: 'd-logline' + (it.logline ? '' : ' empty'), text: it.logline || '一言あらすじは未入力です'}));
-  if(it.genres.length) wrap.append(h('div', {class: 'tags d-tags'}, it.genres.map(function(g){ return h('span', {class: 'tag', text: g}); })));
+  var dText = h('div', {class: 'd-text'},
+    h('div', {class: 'meta'}, h('span', {class: 'no-big', text: 'No.' + pad(no)}), statusTag(it), it.hidden ? h('span', {class: 'tag draft', text: '非公開（下書き）'}) : null),
+    it.title ? h('p', {class: 'd-title', text: it.title}) : null,
+    h('h1', {class: 'd-logline' + (it.logline ? '' : ' empty'), text: it.logline || '一言あらすじは未入力です'}),
+    it.genres.length ? h('div', {class: 'tags d-tags'}, it.genres.map(function(g){ return h('span', {class: 'tag', text: g}); })) : null);
+  var dHead = h('div', {class: 'd-head'}, dText);
+  if(it.thumb){
+    dHead.append(h('button', {class: 'd-thumb', type: 'button', 'aria-label': 'サムネイルを大きく表示', onclick: function(){
+      fetchThumb(it).then(function(u){ if(u){ S.light = u; render(); } });
+    }}, thumbBox(it)));
+  }
+  wrap.append(dHead);
 
   var sheet = h('div', {class: 'sheet'});
   sheet.append(sec('あらすじ', '', textView(it.synopsis)));
@@ -732,6 +874,7 @@ function render(){
   else node = bootScreen();
   $app.replaceChildren(node);
   if(S.modal && S.screen === 'saved') $app.append(shareDialog());
+  if(S.light) $app.append(h('div', {class: 'lightbox', role: 'dialog', 'aria-label': 'サムネイル', onclick: function(){ S.light = ''; render(); }}, h('img', {src: S.light, alt: ''})));
   Array.prototype.forEach.call($app.querySelectorAll('textarea'), autosize);
   var it = S.screen === 'detail' ? (S.editing ? S.draft : current()) : null;
   document.title = it && (it.title || it.logline) ? (it.title || it.logline) + '｜企画ノート' : '企画ノート';
@@ -748,7 +891,22 @@ else { S.screen = 'lock'; render(); }
 document.addEventListener('visibilitychange', function(){
   if(document.visibilityState === 'visible' && S.token && S.role && !S.editing && !S.busy && !S.modal && !S.reorder) load(true);
 });
-document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && S.modal){ S.modal = false; render(); } });
+document.addEventListener('keydown', function(e){
+  if(e.key !== 'Escape') return;
+  if(S.light){ S.light = ''; render(); }
+  else if(S.modal){ S.modal = false; render(); }
+});
+/* コピーした画像を、編集中ならそのまま貼り付けられる */
+document.addEventListener('paste', function(e){
+  if(!S.editing || !e.clipboardData) return;
+  var list = e.clipboardData.items || [];
+  for(var i = 0; i < list.length; i++){
+    if(list[i].kind === 'file' && list[i].type.indexOf('image/') === 0){
+      var file = list[i].getAsFile();
+      if(file){ e.preventDefault(); setDraftThumb(file); return; }
+    }
+  }
+});
 window.addEventListener('beforeunload', function(e){ if(S.editing){ e.preventDefault(); e.returnValue = ''; } });
 })();
 </script>
