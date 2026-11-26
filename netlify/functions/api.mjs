@@ -91,7 +91,6 @@ function cleanItem(x, id) {
     chars: chars.map((c) => ({ name: s(c && c.name).slice(0, 100), desc: s(c && c.desc) })),
     plot: [0, 1, 2].map((i) => s(plot[i])),
     hidden: x.hidden === true,
-    status: ["idea", "plot", "name"].includes(x.status) ? x.status : "",
     updated: new Date().toISOString(),
   };
 }
