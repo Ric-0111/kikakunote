@@ -110,10 +110,6 @@ button{cursor:pointer}
 .tags{display:flex; flex-wrap:wrap; gap:5px 6px; margin-top:6px; align-items:center}
 .tag{border:1px solid var(--line); border-radius:5px; padding:0 8px; font-size:11px; line-height:1.75; color:var(--muted); background:var(--surface)}
 .tag.draft{border-style:dashed}
-.status{display:inline-flex; align-items:center; gap:5px; font-size:11px; color:var(--muted); line-height:1.75; margin-right:4px}
-.status::before{content:""; width:6px; height:6px; border-radius:50%; background:var(--muted)}
-.status.st-plot::before{background:var(--accent)}
-.status.st-name::before{background:var(--fg)}
 .row-side{display:flex; align-items:center; gap:4px; padding:10px 0 0}
 .icon-btn{display:grid; place-items:center; width:34px; height:34px; background:none; border:0; border-radius:8px; color:var(--muted)}
 .icon-btn:hover:not(:disabled){background:var(--accent-soft); color:var(--accent)}
@@ -178,6 +174,11 @@ button{cursor:pointer}
 .add-char{margin-top:12px}
 .editbar{position:fixed; z-index:6; left:0; right:0; bottom:0; display:flex; justify-content:center; gap:10px; padding:10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); background:var(--surface); border-top:1px solid var(--line)}
 .editbar .btn{min-width:120px}
+
+.backup{margin-top:48px; padding-top:18px; border-top:1px solid var(--line)}
+.backup .btns{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+.confirm{margin-top:14px; padding:14px 16px; background:var(--surface); border:1px solid var(--accent); border-radius:10px}
+.confirm p{margin:0 0 10px}
 
 /* gate */
 .gate{max-width:340px; margin:14vh auto 0; text-align:center}
@@ -259,11 +260,10 @@ function lsSet(k, v){ try{ if(v) localStorage.setItem(k, v); else localStorage.r
 function uid(){ return 'k' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 function str(v){ return typeof v === 'string' ? v : ''; }
 function autosize(t){ t.style.height = 'auto'; t.style.height = (t.scrollHeight + 2) + 'px'; }
-var STATUS = {idea: 'アイデア段階', plot: 'プロット完成', name: 'ネーム着手可'};
 
 /* ---------- data ---------- */
 function blank(){
-  return {id: uid(), title: '', logline: '', synopsis: '', genres: [], target: '', goal: '', hook: '', chars: [], plot: ['', '', ''], status: '', hidden: false, thumb: '', updated: ''};
+  return {id: uid(), title: '', logline: '', synopsis: '', genres: [], target: '', goal: '', hook: '', chars: [], plot: ['', '', ''], hidden: false, thumb: '', updated: ''};
 }
 function normItem(x){
   x = x || {};
@@ -274,7 +274,7 @@ function normItem(x){
     target: str(x.target), goal: str(x.goal), hook: str(x.hook),
     chars: (Array.isArray(x.chars) ? x.chars : []).map(function(c){ return {name: str(c && c.name), desc: str(c && c.desc)}; }),
     plot: [0, 1, 2].map(function(i){ return str(Array.isArray(x.plot) ? x.plot[i] : ''); }),
-    status: STATUS[x.status] ? x.status : '', hidden: x.hidden === true, thumb: str(x.thumb), updated: str(x.updated)
+    hidden: x.hidden === true, thumb: str(x.thumb), updated: str(x.updated)
   };
 }
 
@@ -310,7 +310,7 @@ function loadSaved(){
 var S = {
   screen: 'boot', token: lsGet(TOKEN_KEY), role: '', items: [], id: null, from: 'list', genre: '',
   editing: false, isNew: false, draft: null, busy: false, msg: '', err: '', focusId: '', delArmed: false,
-  saved: loadSaved(), modal: false, reorder: false, withLogline: true, light: ''
+  saved: loadSaved(), modal: false, reorder: false, withLogline: true, light: '', plan: null
 };
 function canEdit(){ return S.role === 'edit'; }
 function byId(id){ return S.items.filter(function(x){ return x.id === id; })[0]; }
@@ -426,6 +426,99 @@ function rawApi(method, path, blob){
   });
 }
 
+/* ---------- backup (edit mode only) ---------- */
+function blobToDataUrl(blob){
+  return new Promise(function(resolve, reject){ var fr = new FileReader(); fr.onload = function(){ resolve(fr.result); }; fr.onerror = reject; fr.readAsDataURL(blob); });
+}
+function dataUrlToBlob(url){
+  var m = /^data:([^;]+);base64,(.*)$/.exec(url);
+  if(!m) return null;
+  var bin = atob(m[2]), u = new Uint8Array(bin.length);
+  for(var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+  return new Blob([u], {type: m[1]});
+}
+function exportBackup(){
+  S.busy = true; S.err = ''; S.msg = 'バックアップを作っています…'; render();
+  var out = [], missing = 0;
+  S.items.reduce(function(p, it){
+    return p.then(function(){
+      var rec = JSON.parse(JSON.stringify(it)); delete rec.thumb; rec.thumbData = '';
+      if(!it.thumb){ out.push(rec); return; }
+      return fetch('/api/thumb/' + encodeURIComponent(it.id) + '?v=' + encodeURIComponent(it.thumb), {headers: {authorization: 'Bearer ' + S.token}})
+        .then(function(r){ if(!r.ok) throw new Error('x'); return r.blob(); })
+        .then(blobToDataUrl)
+        .then(function(d){ rec.thumbData = d; out.push(rec); })
+        .catch(function(){ missing++; out.push(rec); });
+    });
+  }, Promise.resolve()).then(function(){
+    var text = JSON.stringify({app: 'kikaku-note', version: 1, exportedAt: new Date().toISOString(), items: out}, null, 1);
+    var d = new Date(), name = 'kikaku-note-backup-' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '.json';
+    var url = URL.createObjectURL(new Blob([text], {type: 'application/json'}));
+    var a = h('a', {href: url, download: name}); document.body.append(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+    S.busy = false; S.msg = out.length + '本の企画を書き出しました' + (missing ? '（画像' + missing + '枚は取得できませんでした）' : ''); render();
+  }).catch(fail);
+}
+function readBackupFile(file){
+  if(!file) return;
+  var fr = new FileReader();
+  fr.onload = function(){
+    try{
+      var d = JSON.parse(fr.result);
+      if(!d || d.app !== 'kikaku-note' || !Array.isArray(d.items)) throw new Error('format');
+      var seen = {};
+      var plan = d.items.map(function(x){
+        var it = normItem(x);
+        it.thumbData = (x && typeof x.thumbData === 'string' && /^data:image\/(webp|jpeg);base64,/.test(x.thumbData)) ? x.thumbData : '';
+        return it;
+      }).filter(function(it){ if(!/^[A-Za-z0-9_-]+$/.test(it.id) || seen[it.id]) return false; seen[it.id] = 1; return true; });
+      if(!plan.length) throw new Error('empty');
+      S.plan = plan; S.err = ''; S.msg = '';
+    }catch(e){ S.plan = null; S.msg = ''; S.err = 'このファイルは企画ノートのバックアップではありません。'; }
+    render();
+  };
+  fr.onerror = function(){ S.err = 'ファイルを読み込めませんでした。'; render(); };
+  fr.readAsText(file);
+}
+function runImport(){
+  var plan = S.plan, n = 0;
+  if(!plan) return;
+  S.busy = true; S.err = ''; render();
+  plan.reduce(function(p, it){
+    return p.then(function(){
+      n++; S.msg = '読み込んでいます… ' + n + ' / ' + plan.length; render();
+      var payload = JSON.parse(JSON.stringify(it, function(k, v){ return k === 'thumbData' ? undefined : v; }));
+      return api('PUT', '/notes/' + encodeURIComponent(it.id), payload).then(function(){
+        var blob = it.thumbData ? dataUrlToBlob(it.thumbData) : null;
+        if(blob) return rawApi('PUT', '/thumb/' + encodeURIComponent(it.id), blob);
+      });
+    });
+  }, Promise.resolve()).then(function(){
+    return api('PUT', '/order', {ids: plan.map(function(x){ return x.id; })});
+  }).then(function(){
+    S.plan = null; clearThumbs();
+    return load(false).then(function(){ S.busy = false; S.msg = plan.length + '本の企画を読み込みました'; render(); });
+  }).catch(function(e){ S.plan = null; fail(e); load(true); });
+}
+function backupPanel(){
+  var fileIn = h('input', {type: 'file', accept: '.json,application/json', id: 'backup-file', hidden: true});
+  fileIn.addEventListener('change', function(){ var f = fileIn.files && fileIn.files[0]; fileIn.value = ''; readBackupFile(f); });
+  var box = h('section', {class: 'backup'},
+    h('h2', {class: 'sec-label'}, 'データのバックアップ', h('span', {class: 'sec-hint', text: '全企画（非公開を含む）と画像を、1つのファイルに保存します。'})),
+    h('div', {class: 'btns'},
+      h('button', {class: 'btn', type: 'button', disabled: S.busy || !S.items.length, onclick: exportBackup, text: 'バックアップを書き出す'}),
+      h('button', {class: 'btn', type: 'button', disabled: S.busy, onclick: function(){ fileIn.click(); }, text: 'バックアップを読み込む'}),
+      fileIn));
+  if(S.plan){
+    box.append(h('div', {class: 'confirm', role: 'alertdialog', 'aria-label': '読み込みの確認'},
+      h('p', {text: S.plan.length + '本の企画を読み込みます。同じ企画は上書きされ、ほかの企画はそのまま残ります。'}),
+      h('div', {class: 'btns', style: 'margin-top:0'},
+        h('button', {class: 'btn primary', type: 'button', disabled: S.busy, onclick: runImport, text: '読み込む'}),
+        h('button', {class: 'btn', type: 'button', disabled: S.busy, onclick: function(){ S.plan = null; render(); }, text: 'やめる'}))));
+  }
+  return box;
+}
+
 /* ---------- routing: #saved / #n-<id> ---------- */
 function routeFromHash(){
   var hash = location.hash;
@@ -459,7 +552,7 @@ window.addEventListener('popstate', applyRoute);
 
 function toLock(msg){
   S.token = ''; lsSet(TOKEN_KEY, ''); S.role = ''; S.items = []; S.id = null; S.editing = false; S.draft = null; S.isNew = false;
-  clearThumbs(); S.light = '';
+  clearThumbs(); S.light = ''; S.plan = null;
   S.busy = false; S.msg = ''; S.modal = false; S.reorder = false; S.genre = ''; S.err = msg || ''; S.screen = 'lock';
   history.replaceState(null, '', basePath()); render();
 }
@@ -510,10 +603,8 @@ function updateSavedBtn(){
   var n = savedItems().length;
   b.replaceChildren(svg(BOOKMARK, 15, n > 0), '保存一覧' + (n ? '（' + n + '）' : ''));
 }
-function statusTag(it){ return it.status ? h('span', {class: 'status st-' + it.status, text: STATUS[it.status]}) : null; }
 function tagsEl(it, cls){
   return h('div', {class: 'tags ' + (cls || '')},
-    statusTag(it),
     it.genres.map(function(g){ return h('span', {class: 'tag', text: g}); }),
     it.hidden ? h('span', {class: 'tag draft', text: '非公開'}) : null);
 }
@@ -602,6 +693,7 @@ function listScreen(){
     items.forEach(function(it, i){ rows.append(rowEl(it, all.indexOf(it) + 1, 'list', all.indexOf(it), all.length)); });
     wrap.append(rows);
   }
+  if(canEdit() && !S.reorder) wrap.append(backupPanel());
   if(canEdit() && !S.reorder){
     wrap.append(h('button', {class: 'fab', type: 'button', onclick: function(){
       S.draft = blank(); S.isNew = true; S.editing = true; S.id = S.draft.id; S.screen = 'detail'; S.err = ''; S.msg = ''; render(); window.scrollTo(0, 0);
@@ -689,11 +781,6 @@ function editForm(){
       hasImg ? h('button', {class: 'link danger', type: 'button', onclick: clearDraftThumb, text: '画像を削除'}) : null,
       h('p', {class: 'hint', style: 'margin:0', text: '画像をコピーして、この画面でそのまま貼り付け（Ctrl+V）もできます。ドラッグ＆ドロップも使えます。'}),
       fileIn))));
-  var seg = h('div', {class: 'seg', role: 'group', 'aria-label': '進み具合'});
-  [['', '未設定'], ['idea', STATUS.idea], ['plot', STATUS.plot], ['name', STATUS.name]].forEach(function(p){
-    seg.append(h('button', {class: 'chip', type: 'button', 'aria-pressed': d.status === p[0] ? 'true' : 'false', onclick: function(){ d.status = p[0]; render(); }, text: p[1]}));
-  });
-  f.append(h('div', {class: 'field'}, h('span', {class: 'sec-label', text: '進み具合'}), seg));
 
   var chips = h('div', {class: 'tags'}, d.genres.map(function(g, i){
     return h('span', {class: 'tag rm'}, g, h('button', {class: 'x', type: 'button', 'aria-label': g + 'を外す', onclick: function(){ d.genres.splice(i, 1); render(); }, text: '×'}));
@@ -772,7 +859,7 @@ function detailScreen(){
   }
 
   var dText = h('div', {class: 'd-text'},
-    h('div', {class: 'meta'}, h('span', {class: 'no-big', text: 'No.' + pad(no)}), statusTag(it), it.hidden ? h('span', {class: 'tag draft', text: '非公開（下書き）'}) : null),
+    h('div', {class: 'meta'}, h('span', {class: 'no-big', text: 'No.' + pad(no)}), it.hidden ? h('span', {class: 'tag draft', text: '非公開（下書き）'}) : null),
     it.title ? h('p', {class: 'd-title', text: it.title}) : null,
     h('h1', {class: 'd-logline' + (it.logline ? '' : ' empty'), text: it.logline || '一言あらすじは未入力です'}),
     it.genres.length ? h('div', {class: 'tags d-tags'}, it.genres.map(function(g){ return h('span', {class: 'tag', text: g}); })) : null);
