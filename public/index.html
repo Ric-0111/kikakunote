@@ -10,147 +10,183 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
 <style>
-/* Layout concept: manga-panel frames with a numbered tab on top, a genre strip along the bottom, compact so three cards fit on one screen. Monochrome ink on paper, one blue-black accent for focus. */
+/* Layout concept: a pitch index an editor can skim. Numbered rows separated by hairlines, logline as the headline, quiet tags; the detail page reads like a one-sheet proposal with labels in a left column. Cool paper white, ink text, one indigo accent. */
 :root{
   color-scheme:light;
-  --bg:#fafafb;
-  --fg:#16171b;
-  --muted:#74767f;
-  --faint:#d8d9df;
-  --accent:#2c3fa8;
-  --danger:#a8261e;
+  --bg:#f6f6f7;
+  --surface:#ffffff;
+  --line:#e2e3e8;
+  --fg:#1b1e26;
+  --muted:#697080;
+  --accent:#2d4bd6;
+  --on-accent:#ffffff;
+  --accent-soft:#e9edff;
+  --danger:#b3261e;
   --font-display:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
   --font-body:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
-  --bw:1.5px;
 }
 @media (prefers-color-scheme: dark){
   :root{
     color-scheme:dark;
-    --bg:#131418; --fg:#ecece9; --muted:#8f919b; --faint:#363840; --accent:#97a4ff; --danger:#ff8f86;
+    --bg:#0f1115; --surface:#171a21; --line:#272b35; --fg:#e8e9ee; --muted:#9298a8;
+    --accent:#93a5ff; --on-accent:#0f1115; --accent-soft:#1c2340; --danger:#ff8f86;
   }
 }
 *{box-sizing:border-box}
 html{background:var(--bg)}
 body{
-  margin:0;
-  background:var(--bg); color:var(--fg);
-  font-family:var(--font-body); font-size:13.5px; line-height:1.75; letter-spacing:.02em;
-  padding-top:calc(18px + env(safe-area-inset-top, 0px));
+  margin:0; background:var(--bg); color:var(--fg);
+  font-family:var(--font-body); font-size:14px; line-height:1.8; letter-spacing:.02em;
+  padding-top:calc(14px + env(safe-area-inset-top, 0px));
   padding-bottom:calc(110px + env(safe-area-inset-bottom, 0px));
   padding-left:max(16px, env(safe-area-inset-left, 0px));
   padding-right:max(16px, env(safe-area-inset-right, 0px));
   -webkit-text-size-adjust:100%;
 }
-.wrap{max-width:540px; margin:0 auto; min-width:0}
+.wrap{max-width:720px; margin:0 auto; min-width:0}
 button,input,textarea{font:inherit; color:inherit; letter-spacing:inherit}
 button{cursor:pointer}
-:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:4px}
+
+/* buttons */
+.btn{white-space:nowrap; display:inline-flex; align-items:center; justify-content:center; gap:6px; background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:5px 14px; font-size:13px; font-weight:500; line-height:1.6; color:var(--fg)}
+.btn:hover:not(:disabled){border-color:var(--muted)}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:var(--on-accent)}
+.btn.primary:hover:not(:disabled){filter:brightness(1.08)}
+.btn.on{background:var(--accent-soft); border-color:var(--accent); color:var(--accent)}
+.btn:disabled{opacity:.4; cursor:default}
+.btn.wide{padding:9px 16px; font-size:14px}
+.link{background:none; border:0; padding:4px 0; font-size:13px; color:var(--muted)}
+.link:hover{color:var(--fg); text-decoration:underline; text-underline-offset:4px}
+.link.danger{color:var(--danger)}
 
 /* header */
-.bar{display:flex; align-items:center; justify-content:space-between; gap:8px 12px; flex-wrap:wrap; margin-bottom:34px}
-.brand{font-family:var(--font-display); font-weight:800; font-size:15px; letter-spacing:.26em}
-.bar-r{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
-.tag{font-size:11px; letter-spacing:.12em; border:var(--bw) solid var(--fg); border-radius:999px; padding:0 10px; line-height:1.9}
-.btn{background:transparent; border:var(--bw) solid var(--fg); border-radius:999px; padding:3px 14px; font-size:12px; font-weight:500; line-height:1.7; letter-spacing:.08em}
-.btn:hover:not(:disabled){background:var(--fg); color:var(--bg)}
-.btn.primary{background:var(--fg); color:var(--bg)}
-.btn.primary:hover:not(:disabled){background:transparent; color:var(--fg)}
-.btn:disabled{opacity:.45; cursor:default}
-.link{background:none; border:0; padding:4px 2px; font-size:12px; color:var(--muted); text-decoration:underline; text-underline-offset:4px}
-.link:hover{color:var(--fg)}
-.link.danger{color:var(--danger)}
-.msg{min-height:1.6em; font-size:12px; color:var(--muted); margin:-26px 0 14px; text-align:center}
+.bar{display:flex; align-items:center; justify-content:space-between; gap:12px; padding-bottom:12px; margin-bottom:26px; border-bottom:1px solid var(--line)}
+.brand{background:none; border:0; padding:0; font-family:var(--font-display); font-weight:800; font-size:16px; letter-spacing:.2em; color:var(--fg)}
+.bar-r{display:flex; gap:8px; align-items:center}
+.msg{min-height:1.5em; margin:-12px 0 8px; font-size:12px; color:var(--muted)}
 .msg.err{color:var(--danger)}
 
-/* panel with number tab */
-.panel{position:relative; border:var(--bw) solid var(--fg); background:var(--bg); margin-top:30px}
-.tab{position:absolute; bottom:100%; left:50%; transform:translateX(-50%); width:58px; height:calc(29px + var(--bw)); border:var(--bw) solid var(--fg); border-bottom:0; border-radius:30px 30px 0 0; background:var(--bg); display:grid; place-items:end center; padding-bottom:4px; font-weight:700; font-size:14px; line-height:1.4}
-.tab svg{display:block}
-.panel-body{padding:26px 20px 22px; text-align:center}
-.card-title{margin:0 0 6px; font-size:10.5px; letter-spacing:.18em; color:var(--muted)}
-.logline{margin:0; font-family:var(--font-display); font-weight:800; font-size:clamp(15px, 3vw, 17.5px); line-height:1.6; letter-spacing:.05em; text-wrap:balance; overflow-wrap:anywhere}
-.logline.empty{font-weight:600; color:var(--muted); font-size:13px}
-.strip{border-top:var(--bw) solid var(--fg); padding:10px 12px; display:flex; flex-wrap:wrap; justify-content:center; gap:6px 10px}
-.pill{flex:0 1 124px; min-width:0; text-align:center; border:var(--bw) solid var(--fg); border-radius:999px; padding:0 10px; font-size:11px; font-weight:700; letter-spacing:.08em; line-height:1.85; overflow-wrap:anywhere}
-.strip-empty{font-size:11px; color:var(--muted); letter-spacing:.12em}
+/* page heading + toolbar */
+.head{display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap}
+.h1{margin:0; font-family:var(--font-display); font-weight:800; font-size:21px; letter-spacing:.1em; line-height:1.4}
+.count{font-size:12px; color:var(--muted); letter-spacing:.08em}
+.lead{margin:6px 0 0; font-size:12.5px; color:var(--muted)}
+.chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:14px}
+.chip{border:1px solid var(--line); background:transparent; color:var(--muted); border-radius:999px; padding:1px 12px; font-size:12px; line-height:1.9}
+.chip:hover{color:var(--fg); border-color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--fg); border-color:var(--fg); color:var(--bg)}
+.tools{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px}
+.hint{margin:10px 0 0; font-size:12px; color:var(--muted)}
 
-/* list */
-.card{cursor:pointer; margin-top:48px; box-shadow:4px 4px 0 var(--faint); transition:box-shadow .15s, transform .15s}
-.card:first-of-type{margin-top:34px}
-.card:hover{box-shadow:6px 6px 0 var(--faint); transform:translate(-1px,-1px)}
-.count{font-size:11px; letter-spacing:.18em; color:var(--muted); text-align:center; margin:0}
-.dots{display:flex; flex-direction:column; align-items:center; gap:14px; margin:44px 0 0}
-.dots span{display:block; border-radius:50%; background:var(--fg)}
-.dots span:nth-child(1){width:7px; height:7px}
-.dots span:nth-child(2){width:5px; height:5px}
-.dots span:nth-child(3){width:4px; height:4px}
-.dots span:nth-child(4){width:3px; height:3px}
-.fab{position:fixed; right:calc(max(16px, env(safe-area-inset-right, 0px)) + 4px); bottom:calc(env(safe-area-inset-bottom, 0px) + 20px); width:54px; height:54px; border-radius:50%; border:var(--bw) solid var(--fg); background:var(--bg); display:grid; place-items:center; box-shadow:3px 3px 0 var(--faint); transition:transform .15s, box-shadow .15s}
-.fab:hover{transform:translate(-1px,-1px); box-shadow:5px 5px 0 var(--faint); background:var(--fg); color:var(--bg)}
-.empty-note{text-align:center; color:var(--muted); margin-top:40px; line-height:2}
+/* index rows */
+.rows{margin-top:16px; border-top:1px solid var(--line)}
+.row{display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:4px 10px; border-bottom:1px solid var(--line)}
+.row.dim{opacity:.62}
+.row-main{display:grid; grid-template-columns:2.1rem minmax(0,1fr); gap:0 6px; width:100%; text-align:left; background:none; border:0; padding:16px 0; border-radius:6px}
+.row-main:hover .row-logline{color:var(--accent)}
+.no{font-family:var(--font-display); font-weight:800; font-size:15px; color:var(--muted); font-variant-numeric:tabular-nums; line-height:1.6}
+.row-body{display:grid; gap:2px; min-width:0}
+.row-title{font-size:11.5px; color:var(--muted); letter-spacing:.08em; overflow-wrap:anywhere}
+.row-logline{font-family:var(--font-display); font-weight:800; font-size:16.5px; line-height:1.55; letter-spacing:.04em; overflow-wrap:anywhere; transition:color .12s}
+.row-logline.empty{font-weight:600; color:var(--muted); font-size:14px}
+.tags{display:flex; flex-wrap:wrap; gap:5px 6px; margin-top:6px; align-items:center}
+.tag{border:1px solid var(--line); border-radius:5px; padding:0 8px; font-size:11px; line-height:1.75; color:var(--muted); background:var(--surface)}
+.tag.draft{border-style:dashed}
+.status{display:inline-flex; align-items:center; gap:5px; font-size:11px; color:var(--muted); line-height:1.75; margin-right:4px}
+.status::before{content:""; width:6px; height:6px; border-radius:50%; background:var(--muted)}
+.status.st-plot::before{background:var(--accent)}
+.status.st-name::before{background:var(--fg)}
+.row-side{display:flex; align-items:center; gap:4px; padding:10px 0 0}
+.icon-btn{display:grid; place-items:center; width:34px; height:34px; background:none; border:0; border-radius:8px; color:var(--muted)}
+.icon-btn:hover:not(:disabled){background:var(--accent-soft); color:var(--accent)}
+.icon-btn[aria-pressed="true"]{color:var(--accent)}
+.icon-btn:disabled{opacity:.25; cursor:default}
+.empty-note{margin:56px 0 0; text-align:center; color:var(--muted); line-height:2}
+
+/* floating actions */
+.fab{position:fixed; z-index:5; right:calc(max(16px, env(safe-area-inset-right, 0px)) + 2px); bottom:calc(env(safe-area-inset-bottom, 0px) + 18px); display:inline-flex; align-items:center; gap:7px; padding:10px 18px; border:1px solid var(--accent); border-radius:999px; background:var(--accent); color:var(--on-accent); font-size:13.5px; font-weight:700; letter-spacing:.06em; line-height:1.5; box-shadow:0 6px 18px rgba(20,24,40,.22)}
+.fab:hover{filter:brightness(1.08)}
+.fab.off{background:var(--surface); color:var(--fg); border-color:var(--line)}
+.fab svg{display:block}
 
 /* detail */
-.back{margin-bottom:8px}
-.top-actions{display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:34px}
-.top-actions .grp{display:flex; gap:8px; flex-wrap:wrap}
-.sections{display:grid; gap:40px; margin-top:48px}
-.sec{min-width:0}
-.sec-label{margin:0 0 2px; font-size:12px; font-weight:700; letter-spacing:.14em}
-.sec-hint{margin:0 0 8px; font-size:11px; color:var(--muted); letter-spacing:.05em}
-.text{margin:0; white-space:pre-wrap; overflow-wrap:anywhere}
+.nav{display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:22px}
+.nav .grp{display:flex; gap:8px; flex-wrap:wrap}
+.meta{display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-size:12px; color:var(--muted); letter-spacing:.08em}
+.meta .no-big{font-family:var(--font-display); font-weight:800; font-size:13px; color:var(--fg)}
+.d-title{margin:8px 0 0; font-size:13px; color:var(--muted); letter-spacing:.1em; overflow-wrap:anywhere}
+.d-logline{margin:4px 0 0; font-family:var(--font-display); font-weight:800; font-size:clamp(21px, 4.6vw, 28px); line-height:1.55; letter-spacing:.04em; text-wrap:balance; overflow-wrap:anywhere}
+.d-logline.empty{font-weight:600; color:var(--muted); font-size:17px}
+.d-tags{margin-top:14px}
+.sheet{margin-top:26px}
+.sec{display:grid; grid-template-columns:12.5rem minmax(0,1fr); gap:6px 20px; padding:20px 0; border-top:1px solid var(--line)}
+.sec-label{margin:0; font-size:12px; font-weight:700; letter-spacing:.1em; color:var(--muted)}
+.sec-hint{display:block; margin-top:2px; font-size:11px; font-weight:400; letter-spacing:.04em; opacity:.85}
+.sec-body{min-width:0}
+.text{margin:0; white-space:pre-wrap; overflow-wrap:anywhere; font-size:14.5px; line-height:1.95}
 .text.empty{color:var(--muted)}
-.chars{display:grid; gap:24px}
-.char{min-width:0}
-.char-name{margin:0; font-family:var(--font-display); font-weight:800; font-size:16px; letter-spacing:.07em}
-.char-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px}
-.char-no{font-size:11px; color:var(--muted); letter-spacing:.14em}
-.plot{display:grid; gap:20px}
-.ep{display:grid; grid-template-columns:3.6rem minmax(0,1fr); gap:4px 12px}
-.ep-no{font-family:var(--font-display); font-weight:800; letter-spacing:.08em; padding-top:1px}
-.stamp{margin-top:48px; text-align:center; font-size:11px; color:var(--muted); letter-spacing:.12em}
-.danger-zone{margin-top:16px; text-align:center}
+.chars{display:grid; gap:10px}
+.char{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:12px 14px; min-width:0}
+.char-name{margin:0 0 2px; font-family:var(--font-display); font-weight:800; font-size:16px; letter-spacing:.06em}
+.plot{display:grid; gap:18px}
+.ep{display:grid; grid-template-columns:3.4rem minmax(0,1fr); gap:2px 12px}
+.ep-no{font-weight:700; font-size:12.5px; color:var(--accent); letter-spacing:.06em; padding-top:2px}
+.pager{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:34px}
+.pg{display:grid; gap:2px; text-align:left; background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:10px 14px; min-width:0}
+.pg:hover{border-color:var(--muted)}
+.pg.next{text-align:right}
+.pg small{font-size:11px; color:var(--muted); letter-spacing:.06em}
+.pg span{font-family:var(--font-display); font-weight:800; font-size:13.5px; line-height:1.5; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical}
+.foot{margin-top:30px; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; font-size:12px; color:var(--muted)}
 
-/* inputs */
-.in{display:block; width:100%; background:transparent; border:var(--bw) solid var(--faint); border-radius:0; padding:8px 11px; line-height:1.75; resize:none; overflow:hidden}
+/* form */
+.in{display:block; width:100%; background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:9px 12px; font-size:16px; line-height:1.7; resize:none; overflow:hidden}
 .in:hover{border-color:var(--muted)}
-.in:focus{border-color:var(--fg); outline:none}
-.in:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
-.in::placeholder{color:var(--muted); opacity:.75}
-.in.bare{border:0; border-bottom:1px dashed var(--faint); padding:6px 4px; text-align:center}
-.in.bare:focus{border-bottom-color:var(--fg)}
-.in.title{font-size:11px; letter-spacing:.18em; margin-bottom:8px}
-.in.logline-in{font-family:var(--font-display); font-weight:800; font-size:clamp(15px, 3vw, 17.5px); line-height:1.6; letter-spacing:.05em}
-.title-view{margin:0 0 6px; font-size:10.5px; letter-spacing:.18em; color:var(--muted)}
-.genre-add{border-top:1px dashed var(--faint); padding:10px 12px; display:flex; gap:8px; align-items:center}
-.genre-add .in{padding:4px 10px}
-.pill.removable{display:inline-flex; align-items:center; justify-content:center; gap:6px}
-.x{background:none; border:0; padding:0 2px; line-height:1; font-size:14px; color:var(--muted)}
+.in:focus{border-color:var(--accent); outline:none; box-shadow:0 0 0 3px var(--accent-soft)}
+.in::placeholder{color:var(--muted); opacity:.7}
+.in.big{font-family:var(--font-display); font-weight:800; font-size:18px; line-height:1.6}
+.field{display:grid; gap:6px; margin-top:12px}
+.seg{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px}
+.check{display:flex; gap:10px; align-items:flex-start; margin-top:18px; font-size:13px}
+.check input{margin-top:5px; width:16px; height:16px; accent-color:var(--accent)}
+.genre-row{display:flex; gap:8px; margin-top:8px}
+.genre-row .in{padding:6px 12px; font-size:16px}
+.tag.rm{display:inline-flex; align-items:center; gap:6px; color:var(--fg)}
+.x{background:none; border:0; padding:0 2px; line-height:1; font-size:15px; color:var(--muted)}
 .x:hover{color:var(--danger)}
-.add-char{margin-top:14px}
+.char-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px}
+.char-no{font-size:11.5px; color:var(--muted); letter-spacing:.1em}
+.stack{display:grid; gap:8px}
+.add-char{margin-top:12px}
+.editbar{position:fixed; z-index:6; left:0; right:0; bottom:0; display:flex; justify-content:center; gap:10px; padding:10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); background:var(--surface); border-top:1px solid var(--line)}
+.editbar .btn{min-width:120px}
 
-/* lock */
-.gate{max-width:360px; margin:12vh auto 0; text-align:center}
-.gate h1{font-family:var(--font-display); font-weight:800; font-size:21px; letter-spacing:.28em; margin:0 0 6px}
-.gate p{margin:0 0 22px; color:var(--muted); font-size:12px; letter-spacing:.08em}
-.gate .panel{text-align:left}
-.gate .panel-body{text-align:left; display:grid; gap:10px; padding:34px 20px 20px}
-.gate .err{color:var(--danger); font-size:12px; min-height:1.5em; margin:0}
-.gate label{font-size:11px; letter-spacing:.12em; color:var(--muted)}
+/* gate */
+.gate{max-width:340px; margin:14vh auto 0; text-align:center}
+.gate h1{margin:0 0 6px; font-family:var(--font-display); font-weight:800; font-size:24px; letter-spacing:.24em}
+.gate p{margin:0 0 22px; color:var(--muted); font-size:12.5px}
+.gate form{display:grid; gap:10px; text-align:left}
+.gate .err{min-height:1.5em; margin:0; color:var(--danger); font-size:12.5px}
 
-@media (max-width:480px){
-  body{padding-top:calc(12px + env(safe-area-inset-top, 0px))}
-  .bar{margin-bottom:26px}
-  .msg{margin-top:-18px}
-  .panel-body{padding:22px 14px 16px}
-  .card{margin-top:40px}
-  .card:first-of-type{margin-top:30px}
-  .strip{padding:8px 10px; gap:6px 8px}
-  .pill{flex:1 1 0; max-width:132px; padding:0 6px; font-size:10.5px; letter-spacing:.04em}
+/* dialog */
+.overlay{position:fixed; inset:0; z-index:50; display:grid; place-items:center; padding:16px; background:rgba(10,12,18,.5)}
+.dialog{width:min(460px,100%); max-height:100%; overflow:auto; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:20px 20px 16px; box-shadow:0 18px 50px rgba(0,0,0,.3)}
+.dialog-title{margin:0 0 12px; font-family:var(--font-display); font-weight:800; font-size:16px; letter-spacing:.08em}
+.share-text{overflow:auto; max-height:260px; font-size:14px}
+.dialog-actions{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap}
+.dialog .check{margin-top:12px}
+.dialog .hint{margin-top:10px}
+
+@media (max-width:640px){
+  .sec{grid-template-columns:1fr; gap:6px; padding:18px 0}
   .ep{grid-template-columns:1fr}
 }
-@media (prefers-reduced-motion: reduce){
-  .card,.fab{transition:none}
-  .card:hover,.fab:hover{transform:none}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important} }
+@media print{
+  body{background:#fff; color:#000; padding:0; font-size:12px}
+  .bar,.nav,.fab,.editbar,.pager,.foot,.msg,.icon-btn{display:none!important}
+  .char{border-color:#bbb}
 }
 </style>
 </head>
@@ -160,7 +196,7 @@ button{cursor:pointer}
 (function(){
 'use strict';
 
-/* ---------- small helpers ---------- */
+/* ---------- helpers ---------- */
 var $app = document.getElementById('app');
 function h(tag, props){
   var e = document.createElement(tag);
@@ -182,26 +218,29 @@ function h(tag, props){
   }
   return e;
 }
-function svg(inner, size){
+function svg(inner, size, filled){
   var s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('width', size || 26); s.setAttribute('height', size || 26);
-  s.setAttribute('fill', 'none'); s.setAttribute('stroke', 'currentColor'); s.setAttribute('stroke-width', '1.6');
+  s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('width', size || 18); s.setAttribute('height', size || 18);
+  s.setAttribute('fill', filled ? 'currentColor' : 'none'); s.setAttribute('stroke', 'currentColor'); s.setAttribute('stroke-width', '1.8');
   s.setAttribute('stroke-linejoin', 'round'); s.setAttribute('stroke-linecap', 'round'); s.setAttribute('aria-hidden', 'true');
   s.innerHTML = inner;
   return s;
 }
-var PENCIL = '<path d="M15.5 4.5l4 4L8 20H4v-4L15.5 4.5z"/><path d="M13 7l4 4"/>';
-var LOCK = '<rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 018 0v3"/>';
-var TOKEN_KEY = 'kikaku-note-token';
+var BOOKMARK = '<path d="M7 4h10v16l-5-4-5 4z"/>';
+var UP = '<path d="M12 19V5M6 11l6-6 6 6"/>';
+var DOWN = '<path d="M12 5v14M6 13l6 6 6-6"/>';
+var PLUS = '<path d="M12 5v14M5 12h14"/>';
+var TOKEN_KEY = 'kikaku-note-token', SAVED_KEY = 'kikaku-note-saved';
 function lsGet(k){ try{ return localStorage.getItem(k) || ''; }catch(e){ return ''; } }
 function lsSet(k, v){ try{ if(v) localStorage.setItem(k, v); else localStorage.removeItem(k); }catch(e){} }
 function uid(){ return 'k' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 function str(v){ return typeof v === 'string' ? v : ''; }
 function autosize(t){ t.style.height = 'auto'; t.style.height = (t.scrollHeight + 2) + 'px'; }
+var STATUS = {idea: 'アイデア段階', plot: 'プロット完成', name: 'ネーム着手可'};
 
 /* ---------- data ---------- */
 function blank(){
-  return {id: uid(), title: '', logline: '', synopsis: '', genres: [], target: '', goal: '', hook: '', chars: [], plot: ['', '', ''], updated: ''};
+  return {id: uid(), title: '', logline: '', synopsis: '', genres: [], target: '', goal: '', hook: '', chars: [], plot: ['', '', ''], status: '', hidden: false, updated: ''};
 }
 function normItem(x){
   x = x || {};
@@ -212,7 +251,7 @@ function normItem(x){
     target: str(x.target), goal: str(x.goal), hook: str(x.hook),
     chars: (Array.isArray(x.chars) ? x.chars : []).map(function(c){ return {name: str(c && c.name), desc: str(c && c.desc)}; }),
     plot: [0, 1, 2].map(function(i){ return str(Array.isArray(x.plot) ? x.plot[i] : ''); }),
-    updated: str(x.updated)
+    status: STATUS[x.status] ? x.status : '', hidden: x.hidden === true, updated: str(x.updated)
   };
 }
 
@@ -241,31 +280,94 @@ function errText(e){
 }
 
 /* ---------- state ---------- */
+function loadSaved(){
+  try{ var a = JSON.parse(lsGet(SAVED_KEY) || '[]'); return Array.isArray(a) ? a.filter(function(x){ return typeof x === 'string'; }) : []; }
+  catch(e){ return []; }
+}
 var S = {
-  screen: 'boot', token: lsGet(TOKEN_KEY), role: '', items: [], id: null,
-  editing: false, isNew: false, draft: null, busy: false, msg: '', err: '', focusId: '', delArmed: false
+  screen: 'boot', token: lsGet(TOKEN_KEY), role: '', items: [], id: null, from: 'list', genre: '',
+  editing: false, isNew: false, draft: null, busy: false, msg: '', err: '', focusId: '', delArmed: false,
+  saved: loadSaved(), modal: false, reorder: false, withLogline: true
 };
 function canEdit(){ return S.role === 'edit'; }
-function current(){ return S.items.filter(function(x){ return x.id === S.id; })[0]; }
+function byId(id){ return S.items.filter(function(x){ return x.id === id; })[0]; }
+function current(){ return byId(S.id); }
+
+function persistSaved(){ lsSet(SAVED_KEY, JSON.stringify(S.saved)); }
+function savedItems(){ return S.saved.map(byId).filter(Boolean); }
+function isSaved(id){ return S.saved.indexOf(id) >= 0; }
+function toggleSaved(id){
+  S.saved = savedItems().map(function(x){ return x.id; });
+  var i = S.saved.indexOf(id);
+  if(i >= 0) S.saved.splice(i, 1); else S.saved.push(id);
+  persistSaved();
+}
+function moveSaved(id, dir){
+  var ids = savedItems().map(function(x){ return x.id; });
+  var i = ids.indexOf(id), j = i + dir;
+  if(i < 0 || j < 0 || j >= ids.length) return;
+  var t = ids[i]; ids[i] = ids[j]; ids[j] = t;
+  S.saved = ids; persistSaved();
+}
+function usedGenres(){
+  var seen = {}, out = [];
+  S.items.forEach(function(it){ it.genres.forEach(function(g){ if(!seen[g]){ seen[g] = 1; out.push(g); } }); });
+  return out;
+}
+function visibleItems(){
+  return S.genre ? S.items.filter(function(it){ return it.genres.indexOf(S.genre) >= 0; }) : S.items;
+}
+
+/* ---------- routing: #saved / #n-<id> ---------- */
+function routeFromHash(){
+  var hash = location.hash;
+  if(hash === '#saved') return {screen: 'saved'};
+  var m = /^#n-([A-Za-z0-9_-]+)$/.exec(hash);
+  if(m) return {screen: 'detail', id: m[1]};
+  return {screen: 'list'};
+}
+function basePath(){ return location.pathname + location.search; }
+function applyRoute(){
+  if(!S.role) return;
+  var r = routeFromHash();
+  S.modal = false;
+  if(S.editing && !(r.screen === 'detail' && r.id === S.id)){ S.editing = false; S.draft = null; S.isNew = false; }
+  if(S.editing){ render(); return; }
+  S.reorder = false;
+  if(r.screen === 'detail'){
+    if(byId(r.id)){ S.screen = 'detail'; S.id = r.id; }
+    else { S.screen = 'list'; history.replaceState(null, '', basePath()); }
+  }else if(r.screen === 'saved' && !canEdit()) S.screen = 'saved';
+  else S.screen = 'list';
+  render();
+}
+function go(hash){
+  history.pushState(null, '', hash || basePath());
+  applyRoute();
+  window.scrollTo(0, 0);
+}
+function openItem(id){ S.from = S.screen === 'saved' ? 'saved' : 'list'; S.delArmed = false; S.msg = ''; S.err = ''; go('#n-' + id); }
+window.addEventListener('popstate', applyRoute);
+
 function toLock(msg){
   S.token = ''; lsSet(TOKEN_KEY, ''); S.role = ''; S.items = []; S.id = null; S.editing = false; S.draft = null; S.isNew = false;
-  S.busy = false; S.msg = ''; S.err = msg || ''; S.screen = 'lock'; render();
+  S.busy = false; S.msg = ''; S.modal = false; S.reorder = false; S.genre = ''; S.err = msg || ''; S.screen = 'lock';
+  history.replaceState(null, '', basePath()); render();
 }
 function fail(e){
   S.busy = false; S.msg = '';
   if(e && e.status === 401){ toLock(errText(e)); return; }
   S.err = errText(e); render();
 }
-
 function load(silent){
   if(!silent){ S.busy = true; S.err = ''; render(); }
   return api('GET', '/notes').then(function(r){
     S.role = r.role === 'edit' ? 'edit' : 'view';
     S.items = (r.items || []).map(normItem);
     S.busy = false;
+    if(S.editing){ return; }
     if(S.screen === 'boot' || S.screen === 'lock') S.screen = 'list';
-    if(S.screen === 'detail' && !S.editing && !current()) S.screen = 'list';
-    if(!(S.editing && S.screen === 'detail')) render();
+    applyRoute();
   }).catch(function(e){
     if(silent) return;
     S.busy = false;
@@ -282,223 +384,357 @@ function login(pw){
   }).catch(function(e){ S.busy = false; S.err = errText(e); render(); });
 }
 
-/* ---------- screens ---------- */
-function tab(content){ return h('div', {class: 'tab'}, content); }
-
-function bar(){
-  return h('header', {class: 'bar'},
-    h('div', {class: 'brand', text: '企画ノート'}),
-    h('div', {class: 'bar-r'},
-      h('span', {class: 'tag', text: canEdit() ? '編集モード' : '閲覧モード'}),
-      h('button', {class: 'btn', disabled: S.busy, onclick: function(){ S.msg = ''; S.err = ''; load(false).then(function(){ S.msg = '最新の内容にしました'; render(); }); }, text: '更新'}),
-      h('button', {class: 'btn', onclick: function(){ toLock(''); }, text: 'ログアウト'})
-    ));
+/* ---------- shared pieces ---------- */
+function header(){
+  var r = h('div', {class: 'bar-r'});
+  if(!canEdit()){
+    var n = savedItems().length;
+    r.append(h('button', {class: 'btn', id: 'saved-btn', type: 'button', onclick: function(){ go('#saved'); }}, svg(BOOKMARK, 15, n > 0), '保存一覧' + (n ? '（' + n + '）' : '')));
+  }
+  r.append(h('button', {class: 'btn', type: 'button', onclick: function(){ toLock(''); }, text: 'ログアウト'}));
+  return h('header', {class: 'bar'}, h('button', {class: 'brand', type: 'button', onclick: function(){ S.genre = ''; go(''); }, text: '企画ノート'}), r);
 }
 function msgLine(){ return h('p', {class: 'msg' + (S.err ? ' err' : ''), 'aria-live': 'polite', text: S.err || S.msg}); }
+function updateSavedBtn(){
+  var b = document.getElementById('saved-btn');
+  if(!b) return;
+  var n = savedItems().length;
+  b.replaceChildren(svg(BOOKMARK, 15, n > 0), '保存一覧' + (n ? '（' + n + '）' : ''));
+}
+function statusTag(it){ return it.status ? h('span', {class: 'status st-' + it.status, text: STATUS[it.status]}) : null; }
+function tagsEl(it, cls){
+  return h('div', {class: 'tags ' + (cls || '')},
+    statusTag(it),
+    it.genres.map(function(g){ return h('span', {class: 'tag', text: g}); }),
+    it.hidden ? h('span', {class: 'tag draft', text: '非公開'}) : null);
+}
+function pad(n){ return (n < 10 ? '0' : '') + n; }
 
-function gateScreen(){
-  var pw = h('input', {class: 'in', type: 'password', id: 'g-pw', autocomplete: 'current-password', placeholder: 'パスワード', 'aria-label': 'パスワード'});
-  var go = h('button', {class: 'btn primary', type: 'submit', text: 'ひらく'});
-  if(S.busy) go.disabled = true;
-  var form = h('form', {onsubmit: function(ev){
-    ev.preventDefault();
-    if(S.busy || !pw.value) return;
-    login(pw.value);
-  }},
-    h('div', {class: 'panel-body'},
-      h('label', {for: 'g-pw', text: 'パスワード'}), pw,
-      h('p', {class: 'err', 'aria-live': 'polite', text: S.err}),
-      go));
-  return h('div', {class: 'gate'},
-    h('h1', {text: '企画ノート'}),
-    h('p', {text: S.busy ? 'ひらいています…' : 'パスワードを知っている人だけが読めます'}),
-    h('div', {class: 'panel'}, tab(svg(LOCK, 22)), form));
+function rowEl(it, no, mode, pos, total){
+  var side = h('div', {class: 'row-side'});
+  var moving = S.reorder && (mode === 'saved' || canEdit());
+  if(moving){
+    side.append(
+      h('button', {class: 'icon-btn', type: 'button', 'aria-label': '上へ', disabled: pos === 0, onclick: function(){ move(it.id, -1, mode); }}, svg(UP)),
+      h('button', {class: 'icon-btn', type: 'button', 'aria-label': '下へ', disabled: pos === total - 1, onclick: function(){ move(it.id, 1, mode); }}, svg(DOWN)));
+    if(mode === 'saved') side.append(h('button', {class: 'link', type: 'button', onclick: function(){ toggleSaved(it.id); render(); }, text: 'はずす'}));
+  }else if(!canEdit()){
+    var on = isSaved(it.id);
+    var b = h('button', {class: 'icon-btn', type: 'button', 'aria-pressed': on ? 'true' : 'false', 'aria-label': on ? '保存をはずす' : 'この企画を保存'}, svg(BOOKMARK, 19, on));
+    b.addEventListener('click', function(){
+      toggleSaved(it.id);
+      if(mode === 'saved'){ render(); return; }
+      var now = isSaved(it.id);
+      b.setAttribute('aria-pressed', now ? 'true' : 'false'); b.setAttribute('aria-label', now ? '保存をはずす' : 'この企画を保存');
+      b.replaceChildren(svg(BOOKMARK, 19, now)); updateSavedBtn();
+    });
+    side.append(b);
+  }
+  return h('div', {class: 'row' + (it.hidden ? ' dim' : '')},
+    h('button', {class: 'row-main', type: 'button', onclick: function(){ openItem(it.id); }},
+      h('span', {class: 'no', text: pad(no)}),
+      h('span', {class: 'row-body'},
+        it.title ? h('span', {class: 'row-title', text: it.title}) : null,
+        h('span', {class: 'row-logline' + (it.logline ? '' : ' empty'), text: it.logline || '一言あらすじ未入力'}),
+        tagsEl(it))),
+    side);
+}
+var orderChain = Promise.resolve();
+function move(id, dir, mode){
+  if(mode === 'saved'){ moveSaved(id, dir); render(); return; }
+  var i = S.items.findIndex(function(x){ return x.id === id; }), j = i + dir;
+  if(i < 0 || j < 0 || j >= S.items.length) return;
+  var t = S.items[i]; S.items[i] = S.items[j]; S.items[j] = t;
+  render();
+  var ids = S.items.map(function(x){ return x.id; });
+  orderChain = orderChain.then(function(){ return api('PUT', '/order', {ids: ids}); }).catch(function(e){
+    if(e && e.status === 401){ toLock(errText(e)); return; }
+    S.err = '並び順を保存できませんでした。'; load(false);
+  });
 }
 
-function cardEl(it, idx){
-  var open = function(){ S.id = it.id; S.editing = false; S.isNew = false; S.draft = null; S.screen = 'detail'; S.err = ''; S.msg = ''; S.delArmed = false; render(); window.scrollTo(0, 0); };
-  var strip = h('div', {class: 'strip'}, it.genres.length ? it.genres.map(function(g){ return h('span', {class: 'pill', text: g}); }) : h('span', {class: 'strip-empty', text: 'ジャンル未設定'}));
-  return h('article', {class: 'panel card', tabindex: '0', role: 'button', 'aria-label': (it.title || it.logline || '無題') + 'を開く',
-    onclick: open, onkeydown: function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); } }},
-    tab(String(idx + 1)),
-    h('div', {class: 'panel-body'},
-      it.title ? h('p', {class: 'card-title', text: it.title}) : null,
-      h('p', {class: 'logline' + (it.logline ? '' : ' empty'), text: it.logline || '一言あらすじは未入力です'})),
-    strip);
+/* ---------- screens ---------- */
+function gateScreen(){
+  var pw = h('input', {class: 'in', type: 'password', id: 'g-pw', autocomplete: 'current-password', placeholder: 'パスワード', 'aria-label': 'パスワード'});
+  var go_ = h('button', {class: 'btn primary wide', type: 'submit', text: 'ひらく'});
+  if(S.busy) go_.disabled = true;
+  return h('div', {class: 'gate'},
+    h('h1', {text: '企画ノート'}),
+    h('p', {text: S.busy ? 'ひらいています…' : 'パスワードを入力してください'}),
+    h('form', {onsubmit: function(ev){ ev.preventDefault(); if(S.busy || !pw.value) return; login(pw.value); }},
+      pw, h('p', {class: 'err', 'aria-live': 'polite', text: S.err}), go_));
+}
+function bootScreen(){
+  return h('div', {class: 'gate'}, h('h1', {text: '企画ノート'}), h('p', {text: '読み込んでいます…'}));
 }
 
 function listScreen(){
-  var items = S.items;
-  var wrap = h('div', {class: 'wrap'}, bar(), msgLine());
-  if(!items.length){
-    wrap.append(h('p', {class: 'empty-note'}, 'まだ企画がありません。', h('br'), canEdit() ? '右下の鉛筆から、最初のネタを書き留めましょう。' : '公開されるまでお待ちください。'));
-  }else{
-    wrap.append(h('p', {class: 'count', text: '全' + items.length + '本'}));
-    items.forEach(function(it, i){ wrap.append(cardEl(it, i)); });
-    wrap.append(h('div', {class: 'dots', 'aria-hidden': 'true'}, h('span'), h('span'), h('span'), h('span')));
+  var all = S.items, items = visibleItems();
+  var wrap = h('div', {class: 'wrap'}, header(), msgLine());
+  wrap.append(h('div', {class: 'head'}, h('h1', {class: 'h1', text: '企画一覧'}), h('span', {class: 'count', text: '全' + all.length + '本' + (S.genre ? '（' + S.genre + '：' + items.length + '本）' : '')})));
+  if(!canEdit() && !S.saved.length && all.length) wrap.append(h('p', {class: 'lead', text: '気になった企画は、しおりマークで保存できます。あとでまとめて伝えられます。'}));
+  var gs = usedGenres();
+  if(gs.length > 1 && !S.reorder){
+    var chips = h('div', {class: 'chips', role: 'group', 'aria-label': 'ジャンルで絞り込む'});
+    [''].concat(gs).forEach(function(g){
+      chips.append(h('button', {class: 'chip', type: 'button', 'aria-pressed': S.genre === g ? 'true' : 'false', onclick: function(){ S.genre = g; render(); }, text: g || 'すべて'}));
+    });
+    wrap.append(chips);
   }
-  if(canEdit()){
-    wrap.append(h('button', {class: 'fab', 'aria-label': '新しい企画を書く', onclick: function(){
+  if(canEdit() && all.length > 1){
+    wrap.append(h('div', {class: 'tools'}, h('button', {class: 'btn' + (S.reorder ? ' on' : ''), type: 'button', onclick: function(){ S.reorder = !S.reorder; if(S.reorder) S.genre = ''; render(); }, text: S.reorder ? '並び替えを終える' : '並び替え'})));
+    if(S.reorder) wrap.append(h('p', {class: 'hint', text: '矢印で入れ替えます。順番は自動で保存され、閲覧する人にも同じ順で表示されます。'}));
+  }
+  if(!items.length){
+    wrap.append(h('p', {class: 'empty-note'}, all.length ? 'このジャンルの企画はありません。' : 'まだ企画がありません。', h('br'), !all.length ? (canEdit() ? '右下の「企画を書く」から、最初のネタを書き留めましょう。' : '公開されるまでお待ちください。') : ''));
+  }else{
+    var rows = h('div', {class: 'rows'});
+    items.forEach(function(it, i){ rows.append(rowEl(it, all.indexOf(it) + 1, 'list', all.indexOf(it), all.length)); });
+    wrap.append(rows);
+  }
+  if(canEdit() && !S.reorder){
+    wrap.append(h('button', {class: 'fab', type: 'button', onclick: function(){
       S.draft = blank(); S.isNew = true; S.editing = true; S.id = S.draft.id; S.screen = 'detail'; S.err = ''; S.msg = ''; render(); window.scrollTo(0, 0);
-    }}, svg(PENCIL, 24)));
+    }}, svg(PLUS, 16), '企画を書く'));
   }
   return wrap;
 }
 
-function secView(label, hint, valueNode){
-  return h('section', {class: 'sec'}, h('h2', {class: 'sec-label', text: label}), hint ? h('p', {class: 'sec-hint', text: hint}) : null, valueNode);
+function savedScreen(){
+  var list = savedItems();
+  var wrap = h('div', {class: 'wrap'}, header(), msgLine());
+  wrap.append(h('div', {class: 'nav'}, h('button', {class: 'link', type: 'button', onclick: function(){ go(''); }, text: '← 企画一覧'})));
+  wrap.append(h('div', {class: 'head'}, h('h1', {class: 'h1', text: '保存一覧'}), h('span', {class: 'count', text: '全' + list.length + '本'})));
+  wrap.append(h('div', {class: 'tools'},
+    h('button', {class: 'btn' + (S.reorder ? ' on' : ''), type: 'button', disabled: list.length < 2, onclick: function(){ S.reorder = !S.reorder; render(); }, text: S.reorder ? '並び替えを終える' : '連載化させたい・気に入った順に並び替え'}),
+    h('button', {class: 'btn primary', type: 'button', disabled: !list.length, onclick: function(){ S.modal = true; S.focusId = 'share-copy'; render(); }, text: '気に入った企画リストを伝える'})));
+  if(S.reorder) wrap.append(h('p', {class: 'hint', text: '矢印で順番を入れ替えます。上にあるほど、連載化させたい・気に入った企画です。'}));
+  if(!list.length){
+    wrap.append(h('p', {class: 'empty-note'}, 'まだ保存した企画がありません。', h('br'), '企画のしおりマークを押すと、ここに集まります。'));
+    return wrap;
+  }
+  var rows = h('div', {class: 'rows'});
+  list.forEach(function(it, i){ rows.append(rowEl(it, i + 1, 'saved', i, list.length)); });
+  wrap.append(rows);
+  return wrap;
 }
+
+/* ---- detail ---- */
 function textView(v){ return h('p', {class: 'text' + (v ? '' : ' empty'), text: v || '未入力'}); }
+function sec(label, hint, body){
+  return h('section', {class: 'sec'}, h('h2', {class: 'sec-label'}, label, hint ? h('span', {class: 'sec-hint', text: hint}) : null), h('div', {class: 'sec-body'}, body));
+}
 function area(id, rows, ph, getSet){
   var t = h('textarea', {class: 'in', id: id, rows: String(rows), placeholder: ph});
   t.value = getSet.get();
   t.addEventListener('input', function(){ getSet.set(t.value); autosize(t); });
   return t;
 }
-function simple(key, rows, ph){
-  return area('f-' + key, rows, ph, {get: function(){ return S.draft[key]; }, set: function(v){ S.draft[key] = v; }});
-}
+function simple(key, rows, ph){ return area('f-' + key, rows, ph, {get: function(){ return S.draft[key]; }, set: function(v){ S.draft[key] = v; }}); }
 
 function saveDraft(){
   var d = S.draft; d.genres = d.genres.slice(0, 3);
   S.busy = true; S.err = ''; S.msg = '保存しています…'; render();
   api('PUT', '/notes/' + encodeURIComponent(d.id), d).then(function(r){
     S.items = (r.items || []).map(normItem);
-    S.busy = false; S.msg = '保存しました';
-    S.editing = false; S.isNew = false; S.draft = null; S.id = d.id; S.screen = 'detail';
-    render();
+    var wasNew = S.isNew;
+    S.busy = false; S.msg = '保存しました'; S.editing = false; S.isNew = false; S.draft = null; S.id = d.id;
+    if(wasNew){ go('#n-' + d.id); } else { render(); window.scrollTo(0, 0); }
   }).catch(fail);
 }
 function deleteCurrent(id){
   S.busy = true; S.err = ''; S.msg = '削除しています…'; render();
   api('DELETE', '/notes/' + encodeURIComponent(id)).then(function(r){
     S.items = (r.items || []).map(normItem);
-    S.busy = false; S.msg = '削除しました'; S.screen = 'list'; S.id = null; S.delArmed = false;
-    render();
+    S.busy = false; S.msg = '削除しました'; S.id = null; S.delArmed = false; go('');
   }).catch(fail);
+}
+
+function editForm(){
+  var d = S.draft, f = h('div', {class: 'sheet'});
+  f.append(h('div', {class: 'field'}, h('label', {class: 'sec-label', for: 'f-title', text: 'タイトル（仮でもOK）'}),
+    (function(){ var i = h('input', {class: 'in', id: 'f-title', type: 'text', placeholder: '例：〇〇（仮）'}); i.value = d.title; i.addEventListener('input', function(){ d.title = i.value; }); return i; })()));
+  f.append(h('div', {class: 'field'}, h('label', {class: 'sec-label', for: 'f-logline', text: '一言あらすじ'}), (function(){ var t = simple('logline', 2, '〇〇が〇〇する話'); t.classList.add('big'); return t; })()));
+  var seg = h('div', {class: 'seg', role: 'group', 'aria-label': '進み具合'});
+  [['', '未設定'], ['idea', STATUS.idea], ['plot', STATUS.plot], ['name', STATUS.name]].forEach(function(p){
+    seg.append(h('button', {class: 'chip', type: 'button', 'aria-pressed': d.status === p[0] ? 'true' : 'false', onclick: function(){ d.status = p[0]; render(); }, text: p[1]}));
+  });
+  f.append(h('div', {class: 'field'}, h('span', {class: 'sec-label', text: '進み具合'}), seg));
+
+  var chips = h('div', {class: 'tags'}, d.genres.map(function(g, i){
+    return h('span', {class: 'tag rm'}, g, h('button', {class: 'x', type: 'button', 'aria-label': g + 'を外す', onclick: function(){ d.genres.splice(i, 1); render(); }, text: '×'}));
+  }));
+  var full = d.genres.length >= 3;
+  var gi = h('input', {class: 'in', id: 'f-genre', type: 'text', maxlength: '14', placeholder: full ? '3つ登録済みです' : 'ジャンル（例：ラブコメ）', 'aria-label': 'ジャンル'});
+  if(full) gi.disabled = true;
+  var addGenre = function(){
+    var v = gi.value.trim();
+    if(!v || d.genres.length >= 3) return;
+    if(d.genres.indexOf(v) < 0) d.genres.push(v);
+    S.focusId = 'f-genre'; render();
+  };
+  gi.addEventListener('keydown', function(e){ if(e.key === 'Enter' && !e.isComposing && e.keyCode !== 229){ e.preventDefault(); addGenre(); } });
+  var addBtn = h('button', {class: 'btn', type: 'button', onclick: addGenre, text: '追加'}); if(full) addBtn.disabled = true;
+  f.append(h('div', {class: 'field'}, h('label', {class: 'sec-label', for: 'f-genre', text: 'ジャンル（3つまで）'}), d.genres.length ? chips : null, h('div', {class: 'genre-row'}, gi, addBtn)));
+
+  function ta(label, hint, key, rows, ph){
+    return h('div', {class: 'field'}, h('label', {class: 'sec-label', for: 'f-' + key}, label, hint ? h('span', {class: 'sec-hint', text: hint}) : null), simple(key, rows, ph));
+  }
+  f.append(ta('あらすじ', '', 'synopsis', 6, '物語の流れを、自由に書いてください'));
+  f.append(ta('ターゲット読者', 'どんな読者に向けて描くか', 'target', 3, '例：仕事に疲れた20〜30代の会社員'));
+  f.append(ta('この漫画でやりたいこと', '', 'goal', 4, '描きたいシーン、伝えたい感情、試したい表現など'));
+  f.append(ta('読み続けてもらうポイント', '次の話も読みたくなる引き', 'hook', 4, '謎、成長、関係の変化、毎話の楽しみなど'));
+
+  var list = h('div', {class: 'stack'});
+  d.chars.forEach(function(c, i){
+    var nm = h('input', {class: 'in', id: 'c-name-' + i, type: 'text', placeholder: '名前', 'aria-label': 'キャラ' + (i + 1) + 'の名前'});
+    nm.value = c.name; nm.addEventListener('input', function(){ c.name = nm.value; });
+    var ds = area('c-desc-' + i, 3, '年齢・性格・見た目・役割など', {get: function(){ return c.desc; }, set: function(v){ c.desc = v; }});
+    ds.setAttribute('aria-label', 'キャラ' + (i + 1) + 'の説明');
+    list.append(h('div', {class: 'char'},
+      h('div', {class: 'char-head'}, h('span', {class: 'char-no', text: 'キャラ ' + (i + 1)}), h('button', {class: 'link', type: 'button', onclick: function(){ d.chars.splice(i, 1); render(); }, text: '削除'})),
+      h('div', {class: 'stack'}, nm, ds)));
+  });
+  f.append(h('div', {class: 'field'}, h('span', {class: 'sec-label', text: 'キャラクター'}), list,
+    h('div', null, h('button', {class: 'btn add-char', type: 'button', onclick: function(){ d.chars.push({name: '', desc: ''}); S.focusId = 'c-name-' + (d.chars.length - 1); render(); }, text: '＋ キャラを追加'}))));
+
+  var plot = h('div', {class: 'stack'});
+  var phs = ['導入：何が起きて、主人公はどうなるか', '展開：状況がどう変わるか', '引き：次を読みたくなる終わり方'];
+  [0, 1, 2].forEach(function(i){
+    var t = area('f-plot-' + i, 3, phs[i], {get: function(){ return d.plot[i]; }, set: function(v){ d.plot[i] = v; }});
+    t.setAttribute('aria-label', '第' + (i + 1) + '話');
+    plot.append(h('div', {class: 'field', style: 'margin-top:0'}, h('span', {class: 'ep-no', text: '第' + (i + 1) + '話'}), t));
+  });
+  f.append(h('div', {class: 'field'}, h('span', {class: 'sec-label', text: '簡易3話分プロット'}), plot));
+
+  var hid = h('input', {type: 'checkbox', id: 'f-hidden'}); hid.checked = d.hidden;
+  hid.addEventListener('change', function(){ d.hidden = hid.checked; });
+  f.append(h('label', {class: 'check', for: 'f-hidden'}, hid, h('span', null, '非公開にする（下書き）', h('span', {class: 'sec-hint', text: 'チェックすると、閲覧用パスワードの人には表示されません。'}))));
+  return f;
 }
 
 function detailScreen(){
   var editing = S.editing;
   var it = editing ? S.draft : current();
   if(!it){ S.screen = 'list'; return listScreen(); }
-  var idx = S.items.findIndex(function(x){ return x.id === it.id; });
-  var no = idx >= 0 ? idx + 1 : S.items.length + 1;
+  var fromSaved = S.from === 'saved' && !canEdit();
+  var seq = fromSaved ? savedItems() : S.items;
+  var pos = seq.findIndex(function(x){ return x.id === it.id; });
+  var no = S.items.findIndex(function(x){ return x.id === it.id; }) + 1 || S.items.length + 1;
 
-  var back = h('button', {class: 'link back', onclick: function(){ S.screen = 'list'; S.editing = false; S.draft = null; S.isNew = false; S.err = ''; S.msg = ''; render(); window.scrollTo(0, 0); }, text: '← 一覧にもどる'});
-  var actions = h('div', {class: 'grp'});
-  if(canEdit()){
-    if(editing){
-      actions.append(
-        h('button', {class: 'btn', disabled: S.busy, onclick: function(){
-          if(S.isNew){ S.screen = 'list'; S.draft = null; S.isNew = false; }
-          S.editing = false; S.err = ''; render();
-        }, text: 'やめる'}),
-        h('button', {class: 'btn primary', disabled: S.busy, onclick: saveDraft, text: '保存'}));
-    }else{
-      actions.append(h('button', {class: 'btn', onclick: function(){
-        S.draft = JSON.parse(JSON.stringify(it)); S.editing = true; S.err = ''; S.msg = ''; render();
-      }, text: '編集'}));
-    }
-  }
-  var wrap = h('div', {class: 'wrap'}, h('div', {class: 'top-actions'}, back, actions), msgLine());
+  var nav = h('div', {class: 'nav'}, h('button', {class: 'link', type: 'button', onclick: function(){ if(editing && S.isNew){ S.editing = false; S.draft = null; S.isNew = false; S.screen = 'list'; render(); } else go(fromSaved ? '#saved' : ''); }, text: fromSaved ? '← 保存一覧' : '← 企画一覧'}));
+  var grp = h('div', {class: 'grp'});
+  if(canEdit() && !editing) grp.append(h('button', {class: 'btn', type: 'button', onclick: function(){ S.draft = JSON.parse(JSON.stringify(it)); S.editing = true; S.err = ''; S.msg = ''; render(); }, text: '編集'}));
+  nav.append(grp);
+  var wrap = h('div', {class: 'wrap'}, header(), msgLine(), nav);
 
-  var body, strip;
   if(editing){
-    var ti = h('input', {class: 'in bare title', id: 'f-title', type: 'text', placeholder: 'タイトル', 'aria-label': 'タイトル'});
-    ti.value = S.draft.title; ti.addEventListener('input', function(){ S.draft.title = ti.value; });
-    var lg = simple('logline', 2, '〇〇が〇〇する話'); lg.className = 'in bare logline-in'; lg.setAttribute('aria-label', '一言あらすじ');
-    body = h('div', {class: 'panel-body'}, ti, lg);
-    var chips = h('div', {class: 'strip'}, S.draft.genres.length ? S.draft.genres.map(function(g, i){
-      return h('span', {class: 'pill removable'}, g, h('button', {class: 'x', 'aria-label': g + 'を外す', onclick: function(){ S.draft.genres.splice(i, 1); render(); }, text: '×'}));
-    }) : h('span', {class: 'strip-empty', text: 'ジャンルは3つまで'}));
-    var full = S.draft.genres.length >= 3;
-    var gi = h('input', {class: 'in', id: 'f-genre', type: 'text', maxlength: '14', placeholder: full ? '3つ登録済みです' : 'ジャンルを入力（例：ラブコメ）', 'aria-label': 'ジャンル'});
-    if(full) gi.disabled = true;
-    var addGenre = function(){
-      var v = gi.value.trim();
-      if(!v || S.draft.genres.length >= 3) return;
-      if(S.draft.genres.indexOf(v) < 0) S.draft.genres.push(v);
-      S.focusId = 'f-genre'; render();
-    };
-    gi.addEventListener('keydown', function(e){ if(e.key === 'Enter' && !e.isComposing && e.keyCode !== 229){ e.preventDefault(); addGenre(); } });
-    var add = h('button', {class: 'btn', type: 'button', onclick: addGenre, text: '追加'}); if(full) add.disabled = true;
-    strip = h('div', null, chips, h('div', {class: 'genre-add'}, gi, add));
-  }else{
-    body = h('div', {class: 'panel-body'},
-      h('p', {class: 'title-view', text: it.title || '無題'}),
-      h('p', {class: 'logline' + (it.logline ? '' : ' empty'), text: it.logline || '一言あらすじは未入力です'}));
-    strip = h('div', {class: 'strip'}, it.genres.length ? it.genres.map(function(g){ return h('span', {class: 'pill', text: g}); }) : h('span', {class: 'strip-empty', text: 'ジャンル未設定'}));
+    wrap.append(h('div', {class: 'meta'}, h('span', {class: 'no-big', text: 'No.' + pad(no)}), h('span', {text: S.isNew ? '新しい企画' : '編集中'})));
+    wrap.append(editForm());
+    wrap.append(h('div', {class: 'editbar'},
+      h('button', {class: 'btn wide', type: 'button', disabled: S.busy, onclick: function(){ if(S.isNew){ S.screen = 'list'; S.draft = null; S.isNew = false; } S.editing = false; S.err = ''; render(); }, text: 'やめる'}),
+      h('button', {class: 'btn primary wide', type: 'button', disabled: S.busy, onclick: saveDraft, text: '保存'})));
+    return wrap;
   }
-  wrap.append(h('div', {class: 'panel'}, tab(String(no)), body, strip));
 
-  var secs = h('div', {class: 'sections'});
-  function textSec(label, hint, key, rows, ph){
-    secs.append(secView(label, hint, editing ? simple(key, rows, ph) : textView(it[key])));
-  }
-  textSec('あらすじ', '', 'synopsis', 6, '物語の流れを、自由に書いてください');
-  textSec('ターゲット読者', 'どんな読者に向けて描くか', 'target', 3, '例：仕事に疲れた20〜30代の会社員');
-  textSec('この漫画でやりたいこと', '', 'goal', 4, '描きたいシーン、伝えたい感情、試したい表現など');
-  textSec('読み続けてもらうポイント', '次の話も読みたくなる引き', 'hook', 4, '謎、成長、関係の変化、毎話の楽しみなど');
+  wrap.append(h('div', {class: 'meta'}, h('span', {class: 'no-big', text: 'No.' + pad(no)}), statusTag(it), it.hidden ? h('span', {class: 'tag draft', text: '非公開（下書き）'}) : null));
+  if(it.title) wrap.append(h('p', {class: 'd-title', text: it.title}));
+  wrap.append(h('h1', {class: 'd-logline' + (it.logline ? '' : ' empty'), text: it.logline || '一言あらすじは未入力です'}));
+  if(it.genres.length) wrap.append(h('div', {class: 'tags d-tags'}, it.genres.map(function(g){ return h('span', {class: 'tag', text: g}); })));
 
-  var charBox;
-  if(editing){
-    charBox = h('div', null);
-    var list = h('div', {class: 'chars'});
-    S.draft.chars.forEach(function(c, i){
-      var nm = h('input', {class: 'in', id: 'c-name-' + i, type: 'text', placeholder: '名前', 'aria-label': 'キャラ' + (i + 1) + 'の名前'});
-      nm.value = c.name; nm.addEventListener('input', function(){ c.name = nm.value; });
-      var ds = area('c-desc-' + i, 3, '年齢・性格・見た目・役割など', {get: function(){ return c.desc; }, set: function(v){ c.desc = v; }});
-      ds.setAttribute('aria-label', 'キャラ' + (i + 1) + 'の説明');
-      list.append(h('div', {class: 'char'},
-        h('div', {class: 'char-head'}, h('span', {class: 'char-no', text: 'キャラ ' + (i + 1)}), h('button', {class: 'link', onclick: function(){ S.draft.chars.splice(i, 1); render(); }, text: '削除'})),
-        h('div', {style: 'display:grid;gap:10px'}, nm, ds)));
-    });
-    charBox.append(list, h('button', {class: 'btn add-char', onclick: function(){ S.draft.chars.push({name: '', desc: ''}); S.focusId = 'c-name-' + (S.draft.chars.length - 1); render(); }, text: '＋ キャラを追加'}));
-  }else{
-    charBox = it.chars.length ? h('div', {class: 'chars'}, it.chars.map(function(c){
-      return h('div', {class: 'char'}, h('p', {class: 'char-name', text: c.name || '名前未定'}), h('p', {class: 'text' + (c.desc ? '' : ' empty'), text: c.desc || '説明なし'}));
-    })) : textView('');
-  }
-  secs.append(secView('キャラクター', '', charBox));
-
+  var sheet = h('div', {class: 'sheet'});
+  sheet.append(sec('あらすじ', '', textView(it.synopsis)));
+  sheet.append(sec('ターゲット読者', 'どんな読者に向けて描くか', textView(it.target)));
+  sheet.append(sec('この漫画でやりたいこと', '', textView(it.goal)));
+  sheet.append(sec('読み続けてもらうポイント', '次の話も読みたくなる引き', textView(it.hook)));
+  sheet.append(sec('キャラクター', '', it.chars.length ? h('div', {class: 'chars'}, it.chars.map(function(c){
+    return h('div', {class: 'char'}, h('p', {class: 'char-name', text: c.name || '名前未定'}), h('p', {class: 'text' + (c.desc ? '' : ' empty'), text: c.desc || '説明なし'}));
+  })) : textView('')));
   var plot = h('div', {class: 'plot'});
-  [0, 1, 2].forEach(function(i){
-    var cell;
-    if(editing){
-      cell = area('f-plot-' + i, 3, i === 0 ? '導入：何が起きて、主人公はどうなるか' : i === 1 ? '展開：状況がどう変わるか' : '引き：次を読みたくなる終わり方', {get: function(){ return S.draft.plot[i]; }, set: function(v){ S.draft.plot[i] = v; }});
-      cell.setAttribute('aria-label', '第' + (i + 1) + '話のプロット');
-    }else cell = textView(it.plot[i]);
-    plot.append(h('div', {class: 'ep'}, h('div', {class: 'ep-no', text: '第' + (i + 1) + '話'}), cell));
-  });
-  secs.append(secView('簡易3話分プロット', '', plot));
-  wrap.append(secs);
+  [0, 1, 2].forEach(function(i){ plot.append(h('div', {class: 'ep'}, h('div', {class: 'ep-no', text: '第' + (i + 1) + '話'}), textView(it.plot[i]))); });
+  sheet.append(sec('簡易3話分プロット', '', plot));
+  wrap.append(sheet);
 
-  if(!editing && it.updated){
-    var dt = new Date(it.updated);
-    if(!isNaN(dt)) wrap.append(h('p', {class: 'stamp', text: '最終更新 ' + dt.toLocaleDateString('ja-JP')}));
+  if(pos >= 0 && seq.length > 1){
+    var prev = seq[pos - 1], next = seq[pos + 1];
+    var label = function(x){ return x.title || x.logline || '無題'; };
+    wrap.append(h('div', {class: 'pager'},
+      prev ? h('button', {class: 'pg', type: 'button', onclick: function(){ go('#n-' + prev.id); }}, h('small', {text: '← 前の企画'}), h('span', {text: label(prev)})) : h('span'),
+      next ? h('button', {class: 'pg next', type: 'button', onclick: function(){ go('#n-' + next.id); }}, h('small', {text: '次の企画 →'}), h('span', {text: label(next)})) : h('span')));
   }
-  if(!editing && canEdit() && idx >= 0){
-    wrap.append(h('div', {class: 'danger-zone'}, h('button', {class: 'link danger', disabled: S.busy, onclick: function(){
+  var dt = it.updated ? new Date(it.updated) : null;
+  var foot = h('div', {class: 'foot'}, h('span', {text: dt && !isNaN(dt) ? '最終更新 ' + dt.toLocaleDateString('ja-JP') : ''}),
+    h('button', {class: 'link', type: 'button', onclick: function(){ window.print(); }, text: '印刷・PDF保存'}));
+  wrap.append(foot);
+  if(canEdit()){
+    wrap.append(h('div', {style: 'margin-top:14px'}, h('button', {class: 'link danger', type: 'button', disabled: S.busy, onclick: function(){
       if(!S.delArmed){ S.delArmed = true; render(); return; }
       deleteCurrent(it.id);
     }, text: S.delArmed ? '本当に削除する（もう一度押す）' : 'この企画を削除'})));
+  }else{
+    var saveBtn = h('button', {class: 'fab', type: 'button'});
+    var paint = function(){
+      var on = isSaved(it.id);
+      saveBtn.className = 'fab' + (on ? ' off' : '');
+      saveBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      saveBtn.replaceChildren(svg(BOOKMARK, 16, on), on ? '保存済み（はずす）' : 'この企画を保存');
+    };
+    saveBtn.addEventListener('click', function(){ toggleSaved(it.id); paint(); updateSavedBtn(); });
+    paint();
+    wrap.append(saveBtn);
   }
   return wrap;
 }
 
-function bootScreen(){
-  return h('div', {class: 'gate'}, h('h1', {text: '企画ノート'}), h('p', {text: '読み込んでいます…'}));
+/* ---- share dialog ---- */
+function shareText(){
+  var lines = ['気に入った企画リスト（連載化させたい順）'];
+  savedItems().forEach(function(it, i){
+    var head = it.title || it.logline || '無題';
+    lines.push((i + 1) + '. ' + head);
+    if(S.withLogline && it.title && it.logline) lines.push('   ' + it.logline);
+  });
+  return lines.join('\n');
+}
+function copyText(ta, done){
+  function fallback(){ try{ ta.focus(); ta.select(); done(document.execCommand('copy')); }catch(e){ done(false); } }
+  if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(function(){ done(true); }, fallback);
+  else fallback();
+}
+function shareDialog(){
+  var ta = h('textarea', {class: 'in share-text', id: 'share-text', readonly: true, rows: '7', 'aria-label': '気に入った企画リスト'});
+  var note = h('p', {class: 'hint', text: 'コピーして、メールやチャットに貼って送ってください。'});
+  var copy = h('button', {class: 'btn primary', id: 'share-copy', type: 'button', text: 'コピーする'});
+  var refresh = function(){ ta.value = shareText(); ta.rows = Math.min(Math.max(ta.value.split('\n').length, 3), 10); copy.textContent = 'コピーする'; };
+  refresh();
+  var cb = h('input', {type: 'checkbox', id: 'share-logline'}); cb.checked = S.withLogline;
+  cb.addEventListener('change', function(){ S.withLogline = cb.checked; refresh(); });
+  copy.addEventListener('click', function(){
+    copyText(ta, function(ok){ note.textContent = ok ? 'コピーしました。' : 'コピーできませんでした。文字を選んでコピーしてください。'; copy.textContent = ok ? 'コピーしました' : 'コピーする'; });
+  });
+  var close = function(){ S.modal = false; render(); };
+  return h('div', {class: 'overlay', onclick: function(e){ if(e.target === e.currentTarget) close(); }},
+    h('div', {class: 'dialog', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'share-h'},
+      h('h2', {class: 'dialog-title', id: 'share-h', text: '気に入った企画リストを伝える'}),
+      ta,
+      h('label', {class: 'check', for: 'share-logline'}, cb, h('span', {text: '一言あらすじも添える'})),
+      h('div', {class: 'dialog-actions'}, copy, h('button', {class: 'btn', type: 'button', onclick: close, text: '閉じる'})),
+      note));
 }
 
+/* ---------- render ---------- */
 function render(){
   var node;
   if(S.screen === 'lock') node = gateScreen();
   else if(S.screen === 'list') node = listScreen();
   else if(S.screen === 'detail') node = detailScreen();
+  else if(S.screen === 'saved') node = savedScreen();
   else node = bootScreen();
   $app.replaceChildren(node);
+  if(S.modal && S.screen === 'saved') $app.append(shareDialog());
   Array.prototype.forEach.call($app.querySelectorAll('textarea'), autosize);
+  var it = S.screen === 'detail' ? (S.editing ? S.draft : current()) : null;
+  document.title = it && (it.title || it.logline) ? (it.title || it.logline) + '｜企画ノート' : '企画ノート';
   var f = S.focusId; S.focusId = '';
   var target = f ? document.getElementById(f) : (S.screen === 'lock' ? document.getElementById('g-pw') : null);
   if(target && !target.disabled){ try{ target.focus(); }catch(e){} }
@@ -509,10 +745,11 @@ render();
 if(S.token){ load(false); }
 else { S.screen = 'lock'; render(); }
 
-/* 別の端末で書いた内容を、戻ってきたときに自動で読み込む */
 document.addEventListener('visibilitychange', function(){
-  if(document.visibilityState === 'visible' && S.token && S.screen === 'list' && !S.busy) load(true);
+  if(document.visibilityState === 'visible' && S.token && S.role && !S.editing && !S.busy && !S.modal && !S.reorder) load(true);
 });
+document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && S.modal){ S.modal = false; render(); } });
+window.addEventListener('beforeunload', function(e){ if(S.editing){ e.preventDefault(); e.returnValue = ''; } });
 })();
 </script>
 </body>
