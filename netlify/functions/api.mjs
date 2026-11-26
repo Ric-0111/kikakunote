@@ -7,6 +7,9 @@ import { createHmac, timingSafeEqual } from "node:crypto";
  *   GET    /api/notes                         -> { role, items }
  *   PUT    /api/notes/:id      { ...item }    -> { items }   (編集パスワードのみ)
  *   DELETE /api/notes/:id                     -> { items }   (編集パスワードのみ)
+ *   PUT    /api/order          { ids: [...] } -> { items }   (編集パスワードのみ。並び順の保存)
+ *
+ * hidden: true の企画（非公開・下書き）は、閲覧用パスワードの人には送りません。
  *
  * 環境変数: EDIT_PASSWORD / VIEW_PASSWORD / TOKEN_SECRET
  */
@@ -74,6 +77,8 @@ function cleanItem(x, id) {
     hook: s(x.hook),
     chars: chars.map((c) => ({ name: s(c && c.name).slice(0, 100), desc: s(c && c.desc) })),
     plot: [0, 1, 2].map((i) => s(plot[i])),
+    hidden: x.hidden === true,
+    status: ["idea", "plot", "name"].includes(x.status) ? x.status : "",
     updated: new Date().toISOString(),
   };
 }
@@ -119,7 +124,28 @@ export default async (req) => {
   };
 
   if (route === "notes" && !parts[1] && req.method === "GET") {
-    return json({ role: me.role, items: await read() });
+    const all = await read();
+    const items = me.role === "edit" ? all : all.filter((x) => x.hidden !== true);
+    return json({ role: me.role, items });
+  }
+
+  if (route === "order" && req.method === "PUT") {
+    if (me.role !== "edit") return json({ error: "forbidden" }, 403);
+    let body;
+    try { body = await req.json(); } catch { return json({ error: "bad_json" }, 400); }
+    const ids = Array.isArray(body.ids) ? body.ids.map(String) : [];
+    const items = await read();
+    const rank = new Map(ids.map((id, i) => [id, i]));
+    const sorted = items
+      .map((x, i) => ({ x, i }))
+      .sort((a, b) => {
+        const ra = rank.has(a.x.id) ? rank.get(a.x.id) : Infinity;
+        const rb = rank.has(b.x.id) ? rank.get(b.x.id) : Infinity;
+        return ra === rb ? a.i - b.i : ra - rb;
+      })
+      .map((o) => o.x);
+    await store.setJSON("notes", { items: sorted });
+    return json({ items: sorted });
   }
 
   if (route === "notes" && parts[1]) {
